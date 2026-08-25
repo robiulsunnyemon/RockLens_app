@@ -27,13 +27,13 @@ class FieldTestController extends GetxController {
   final baseConfidence = 86.0.obs;
 
   static const List<MohsReference> mohsReferences = [
-    MohsReference(value: 1.0, label: 'Talc (1.0)'),
-    MohsReference(value: 2.5, label: 'Fingernail (2.5)'),
-    MohsReference(value: 3.5, label: 'Copper Penny (3.5)'),
-    MohsReference(value: 4.0, label: 'Iron Nail (4.0)'),
-    MohsReference(value: 5.5, label: 'Knife Blade (5.5)'),
-    MohsReference(value: 7.0, label: 'Quartz Crystal (7.0)'),
-    MohsReference(value: 10.0, label: 'Diamond (10.0)'),
+    MohsReference(value: 1.0, label: 'Talc'),
+    MohsReference(value: 2.5, label: 'Nail'),
+    MohsReference(value: 3.5, label: 'Penny'),
+    MohsReference(value: 4.0, label: 'Iron'),
+    MohsReference(value: 5.5, label: 'Knife'),
+    MohsReference(value: 7.0, label: 'Quartz'),
+    MohsReference(value: 10.0, label: 'Diamond'),
   ];
 
   static const List<StreakColorItem> streakColors = [

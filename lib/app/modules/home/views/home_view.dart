@@ -16,18 +16,14 @@ class HomeView extends GetView<HomeController> {
     return Scaffold(
       backgroundColor: AppColors.litho,
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.only(
-            left: AppDimensions.p16,
-            right: AppDimensions.p16,
-            top: AppDimensions.p12,
-            bottom: AppDimensions.p32,
-          ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppDimensions.p16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header Row
+              const SizedBox(height: AppDimensions.p10),
+
+              // 1. FIXED: Top Header Row
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -39,18 +35,18 @@ class HomeView extends GetView<HomeController> {
                           children: [
                             Image.asset(
                               AppAssets.logo,
-                              width: 16,
-                              height: 16,
+                              width: 15,
+                              height: 15,
                               errorBuilder: (context, error, stackTrace) =>
                                   const Icon(Icons.diamond_outlined,
-                                      size: 16, color: AppColors.ore),
+                                      size: 15, color: AppColors.ore),
                             ),
                             const SizedBox(width: AppDimensions.p6),
                             Text(
                               'OTZAR APP · COMMAND CENTER',
                               style: AppTypography.hudTicker.copyWith(
                                 color: AppColors.ore,
-                                fontSize: 10,
+                                fontSize: 9.5,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 0.8,
                               ),
@@ -61,7 +57,7 @@ class HomeView extends GetView<HomeController> {
                         Text(
                           'Good afternoon, ${controller.operatorName}',
                           style: AppTypography.displayMedium.copyWith(
-                            fontSize: 18,
+                            fontSize: 17,
                             fontWeight: FontWeight.bold,
                           ),
                           maxLines: 1,
@@ -76,8 +72,8 @@ class HomeView extends GetView<HomeController> {
                   GestureDetector(
                     onTap: controller.goToProfile,
                     child: Container(
-                      width: 42,
-                      height: 42,
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: AppColors.goldGradient,
@@ -93,7 +89,7 @@ class HomeView extends GetView<HomeController> {
                           controller.initials,
                           style: AppTypography.buttonText.copyWith(
                             color: AppColors.litho,
-                            fontSize: 14,
+                            fontSize: 13,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -102,17 +98,17 @@ class HomeView extends GetView<HomeController> {
                   ),
                 ],
               ),
-              const SizedBox(height: AppDimensions.p12),
+              const SizedBox(height: AppDimensions.p10),
 
-              // HUD Bar
+              // 2. FIXED: HUD Bar
               const HudBarWidget(pending: 3),
-              const SizedBox(height: AppDimensions.p12),
+              const SizedBox(height: AppDimensions.p8),
 
-              // Sync Alert Banner
+              // 3. FIXED: Sync Alert Banner
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppDimensions.p12,
-                  vertical: AppDimensions.p10,
+                  vertical: 8,
                 ),
                 decoration: BoxDecoration(
                   color: AppColors.ember.withValues(alpha: 0.1),
@@ -140,7 +136,7 @@ class HomeView extends GetView<HomeController> {
                           '3 Scans Staged for Cloud Sync',
                           style: AppTypography.bodySmall.copyWith(
                             color: const Color(0xFFFF9100),
-                            fontSize: 12,
+                            fontSize: 11.5,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -152,8 +148,8 @@ class HomeView extends GetView<HomeController> {
                         backgroundColor: const Color(0xFFFF9100),
                         foregroundColor: AppColors.litho,
                         padding: const EdgeInsets.symmetric(
-                          horizontal: AppDimensions.p12,
-                          vertical: AppDimensions.p6,
+                          horizontal: AppDimensions.p10,
+                          vertical: 4,
                         ),
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -165,7 +161,7 @@ class HomeView extends GetView<HomeController> {
                         'SYNC NOW',
                         style: AppTypography.hudTicker.copyWith(
                           color: AppColors.litho,
-                          fontSize: 10,
+                          fontSize: 9.5,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -173,13 +169,13 @@ class HomeView extends GetView<HomeController> {
                   ],
                 ),
               ),
-              const SizedBox(height: AppDimensions.p16),
+              const SizedBox(height: AppDimensions.p10),
 
-              // Hero AI Scan Card
+              // 4. FIXED: Hero AI Scan Card
               HeroScanCard(onTap: controller.startScanning),
-              const SizedBox(height: AppDimensions.p16),
+              const SizedBox(height: AppDimensions.p10),
 
-              // Stats Row (3 Columns)
+              // 5. FIXED: Stats Row (3 Columns)
               Row(
                 children: [
                   _buildStatCard(
@@ -204,9 +200,9 @@ class HomeView extends GetView<HomeController> {
                   ),
                 ],
               ),
-              const SizedBox(height: AppDimensions.p20),
+              const SizedBox(height: AppDimensions.p12),
 
-              // Recent Specimens Header
+              // 6. FIXED: Recent Specimens Header
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -232,140 +228,122 @@ class HomeView extends GetView<HomeController> {
                   ),
                 ],
               ),
-              const SizedBox(height: AppDimensions.p10),
+              const SizedBox(height: AppDimensions.p8),
 
-              // Recent Specimens List
-              ...controller.recentScans.map((scan) {
-                final color = Color(scan['color'] as int);
-                return Container(
-                  margin: const EdgeInsets.only(bottom: AppDimensions.p8),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppDimensions.p12,
-                    vertical: AppDimensions.p12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: AppDimensions.radius16,
-                    border: Border.all(
-                      color: AppColors.surfaceBorder,
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(AppDimensions.r10),
+              // 7. ONLY SCROLLABLE SECTION: Recent Specimens List
+              Expanded(
+                child: Obx(() {
+                  final scans = controller.recentScans;
+                  return ListView.builder(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.only(bottom: AppDimensions.p16),
+                    itemCount: scans.length,
+                    itemBuilder: (context, idx) {
+                      final scan = scans[idx];
+                      final color = Color(scan['color'] as int);
+
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: AppDimensions.p8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppDimensions.p12,
+                          vertical: AppDimensions.p10,
                         ),
-                        child: Center(
-                          child: Container(
-                            width: 12,
-                            height: 12,
-                            decoration: BoxDecoration(
-                              color: color,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: AppDimensions.radius16,
+                          border: Border.all(
+                            color: AppColors.surfaceBorder,
+                            width: 1,
                           ),
                         ),
-                      ),
-                      const SizedBox(width: AppDimensions.p12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        child: Row(
                           children: [
-                            Row(
-                              children: [
-                                Text(
-                                  scan['name'] as String,
-                                  style: AppTypography.displayMedium.copyWith(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(width: AppDimensions.p6),
-                                Expanded(
-                                  child: Text(
-                                    scan['formula'] as String,
-                                    style: AppTypography.monoTag.copyWith(
-                                      color: AppColors.subtle,
-                                      fontSize: 9,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 2),
-                            Row(
-                              children: [
-                                Text(
-                                  '${scan['conf']}% MATCH',
-                                  style: AppTypography.hudTicker.copyWith(
+                            Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(AppDimensions.r10),
+                              ),
+                              child: Center(
+                                child: Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
                                     color: color,
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.w600,
+                                    borderRadius: BorderRadius.circular(2),
                                   ),
                                 ),
-                                Expanded(
-                                  child: Text(
-                                    ' · ${scan['grade']}',
-                                    style: AppTypography.hudTicker.copyWith(
-                                      color: AppColors.subtle,
-                                      fontSize: 9.5,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: AppDimensions.p12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        scan['name'] as String,
+                                        style: AppTypography.displayMedium.copyWith(
+                                          fontSize: 13.5,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(width: AppDimensions.p6),
+                                      Expanded(
+                                        child: Text(
+                                          scan['formula'] as String,
+                                          style: AppTypography.monoTag.copyWith(
+                                            color: AppColors.subtle,
+                                            fontSize: 9,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 2),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        '${scan['conf']}% MATCH',
+                                        style: AppTypography.hudTicker.copyWith(
+                                          color: color,
+                                          fontSize: 9.5,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Text(
+                                          ' · ${scan['grade']}',
+                                          style: AppTypography.hudTicker.copyWith(
+                                            color: AppColors.subtle,
+                                            fontSize: 9.5,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              scan['time'] as String,
+                              style: AppTypography.hudTicker.copyWith(
+                                color: AppColors.muted,
+                                fontSize: 9.5,
+                              ),
                             ),
                           ],
                         ),
-                      ),
-                      Text(
-                        scan['time'] as String,
-                        style: AppTypography.hudTicker.copyWith(
-                          color: AppColors.muted,
-                          fontSize: 9.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
-              const SizedBox(height: AppDimensions.p12),
-
-              // Quick Actions Grid
-              Row(
-                children: [
-                  _buildQuickAction(
-                    label: 'AI Scanner',
-                    icon: Icons.qr_code_scanner_rounded,
-                    onTap: controller.startScanning,
-                  ),
-                  const SizedBox(width: AppDimensions.p8),
-                  _buildQuickAction(
-                    label: 'Export Hub',
-                    icon: Icons.ios_share_rounded,
-                    onTap: controller.goToExportHub,
-                  ),
-                  const SizedBox(width: AppDimensions.p8),
-                  _buildQuickAction(
-                    label: 'GIS Map',
-                    icon: Icons.map_outlined,
-                    onTap: controller.goToMap,
-                  ),
-                  const SizedBox(width: AppDimensions.p8),
-                  _buildQuickAction(
-                    label: 'Vault Catalog',
-                    icon: Icons.inventory_2_outlined,
-                    onTap: controller.goToVault,
-                  ),
-                ],
+                      );
+                    },
+                  );
+                }),
               ),
             ],
           ),
@@ -384,7 +362,7 @@ class HomeView extends GetView<HomeController> {
       child: Container(
         padding: const EdgeInsets.symmetric(
           horizontal: AppDimensions.p8,
-          vertical: AppDimensions.p12,
+          vertical: AppDimensions.p10,
         ),
         decoration: BoxDecoration(
           color: AppColors.surface,
@@ -401,7 +379,7 @@ class HomeView extends GetView<HomeController> {
               value,
               style: AppTypography.displayMedium.copyWith(
                 color: color,
-                fontSize: 18,
+                fontSize: 17,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -423,54 +401,6 @@ class HomeView extends GetView<HomeController> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickAction({
-    required String label,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return Expanded(
-      child: Material(
-        color: AppColors.surface,
-        borderRadius: AppDimensions.radius16,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: AppDimensions.radius16,
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: AppDimensions.p12),
-            decoration: BoxDecoration(
-              borderRadius: AppDimensions.radius16,
-              border: Border.all(
-                color: AppColors.surfaceBorder,
-                width: 1,
-              ),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, color: AppColors.ore, size: 22),
-                const SizedBox(height: AppDimensions.p4),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2),
-                  child: Text(
-                    label,
-                    style: AppTypography.bodySmall.copyWith(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.quartz,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );

@@ -9,31 +9,42 @@ class HomeController extends GetxController {
 
   UserModel? get currentUser => _storage.currentUser;
 
-  String get operatorName => currentUser?.fullName ?? 'Dr. K. Osei';
+  String get operatorName => currentUser?.fullName ?? 'Dr. Robiul';
   String get initials {
     final parts = operatorName.split(' ');
     if (parts.length >= 2) {
       return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
     }
-    return operatorName.isNotEmpty ? operatorName.substring(0, 2).toUpperCase() : 'OP';
+    return operatorName.isNotEmpty ? operatorName.substring(0, 2).toUpperCase() : 'DR';
   }
   String get designation => currentUser?.designation ?? 'Lead Exploration Geologist';
   String get companyName => currentUser?.companyName ?? 'Pan-African Mineral Consortium';
 
-  List<Map<String, dynamic>> get recentScans {
+  // Reactive observable list for recent scans
+  final recentScans = <Map<String, dynamic>>[].obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    loadRecentScans();
+  }
+
+  void loadRecentScans() {
     final logs = _storage.getDiscoveryLogs();
     if (logs.isNotEmpty) {
-      return logs.take(4).map((log) => {
+      final items = logs.map((log) => {
         'name': log['name'] ?? 'Specimen',
         'formula': log['formula'] ?? 'Mineral',
         'conf': log['conf'] ?? 92,
         'grade': log['grade'] ?? 'Specimen',
         'time': log['date'] ?? 'Recent',
-        'color': 0xFF00E5FF,
+        'color': _getMineralColorHex(log['name'] as String? ?? ''),
       }).toList();
+      recentScans.assignAll(items);
+      return;
     }
 
-    return const [
+    recentScans.assignAll(const [
       {
         'name': 'Malachite',
         'formula': 'Cu₂CO₃(OH)₂',
@@ -58,7 +69,18 @@ class HomeController extends GetxController {
         'time': '09:45',
         'color': 0xFFFF9100,
       },
-    ];
+    ]);
+  }
+
+  int _getMineralColorHex(String name) {
+    final lower = name.toLowerCase();
+    if (lower.contains('malachite')) return 0xFF00C853;
+    if (lower.contains('tanzanite') || lower.contains('azurite')) return 0xFF6366F1;
+    if (lower.contains('gold') || lower.contains('pyrite') || lower.contains('coltan')) return 0xFFD4AF37;
+    if (lower.contains('bornite') || lower.contains('copper')) return 0xFFFF9100;
+    if (lower.contains('chrysocolla') || lower.contains('tourmaline') || lower.contains('quartz')) return 0xFF00E5FF;
+    if (lower.contains('biotite') || lower.contains('emerald')) return 0xFF10B981;
+    return 0xFF00E5FF;
   }
 
   void startScanning() {

@@ -166,38 +166,44 @@ class FieldTestView extends GetView<FieldTestController> {
 
                   // Reference Ticks
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: FieldTestController.mohsReferences.map((ref) {
-                      return Obx(() {
-                        final isPassed = controller.mohs.value >= ref.value;
-                        return Column(
-                          children: [
-                            Container(
-                              width: 3,
-                              height: 10,
-                              decoration: BoxDecoration(
-                                color: isPassed ? AppColors.ore : AppColors.surfaceBorder,
-                                borderRadius: BorderRadius.circular(2),
+                      return Expanded(
+                        child: Obx(() {
+                          final isPassed = controller.mohs.value >= ref.value;
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 2,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: isPassed ? AppColors.ore : AppColors.surfaceBorder,
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              '${ref.value}',
-                              style: AppTypography.monoFooter.copyWith(
-                                color: AppColors.subtle,
-                                fontSize: 8,
+                              const SizedBox(height: 2),
+                              Text(
+                                '${ref.value}',
+                                style: AppTypography.monoFooter.copyWith(
+                                  color: isPassed ? AppColors.ore : AppColors.subtle,
+                                  fontSize: 8,
+                                  fontWeight: isPassed ? FontWeight.bold : FontWeight.normal,
+                                ),
                               ),
-                            ),
-                            Text(
-                              ref.label,
-                              style: AppTypography.monoFooter.copyWith(
-                                color: isPassed ? AppColors.quartz : AppColors.subtle,
-                                fontSize: 7,
+                              Text(
+                                ref.label,
+                                style: AppTypography.monoFooter.copyWith(
+                                  color: isPassed ? AppColors.quartz : AppColors.subtle,
+                                  fontSize: 7,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
                               ),
-                            ),
-                          ],
-                        );
-                      });
+                            ],
+                          );
+                        }),
+                      );
                     }).toList(),
                   ),
                 ],

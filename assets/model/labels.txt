@@ -1,0 +1,14 @@
+basalt
+biotite
+bornite
+chrysocolla
+coal
+granite
+limestone
+malachite
+marble
+muscovite
+pyrite
+quartz
+quartzite
+sandstone

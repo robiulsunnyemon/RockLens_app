@@ -18,6 +18,7 @@ abstract class Routes {
   static const FIELD_TEST = _Paths.FIELD_TEST;
   static const LOGGING = _Paths.LOGGING;
   static const EXPORT_HUB = _Paths.EXPORT_HUB;
+  static const HELP_CENTER = _Paths.HELP_CENTER;
 }
 
 abstract class _Paths {
@@ -38,4 +39,5 @@ abstract class _Paths {
   static const FIELD_TEST = '/field-test';
   static const LOGGING = '/logging';
   static const EXPORT_HUB = '/export-hub';
+  static const HELP_CENTER = '/help-center';
 }

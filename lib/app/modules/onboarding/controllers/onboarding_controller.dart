@@ -49,8 +49,8 @@ class OnboardingController extends GetxController {
   }
 
   void proceedToEmailAccess() {
-    //Get.offNamed(Routes.EMAIL_ACCESS);
-    Get.offNamed(Routes.MAIN_NAV);
+    Get.offNamed(Routes.EMAIL_ACCESS);
+    // Get.offNamed(Routes.MAIN_NAV);
   }
 
   void next() {

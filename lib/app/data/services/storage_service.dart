@@ -66,10 +66,33 @@ class StorageService extends GetxService {
     await _box.write(_keyDiscoveryLogs, logs);
   }
 
+  Future<void> markLogsAsSynced(List<String> tags) async {
+    final logs = getDiscoveryLogs();
+    for (final l in logs) {
+      if (tags.contains(l['tag'])) {
+        l['synced'] = true;
+      }
+    }
+    await _box.write(_keyDiscoveryLogs, logs);
+  }
+
+  Future<void> markAllLogsAsSynced() async {
+    final logs = getDiscoveryLogs();
+    for (final l in logs) {
+      l['synced'] = true;
+    }
+    await _box.write(_keyDiscoveryLogs, logs);
+  }
+
   // Clear session
   Future<void> clearSession() async {
     await _box.remove(_keyAccessToken);
     await _box.remove(_keyRefreshToken);
     await _box.remove(_keyUser);
+  }
+
+  // Clear all storage box data
+  Future<void> clearAll() async {
+    await _box.erase();
   }
 }

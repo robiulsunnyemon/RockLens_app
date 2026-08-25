@@ -117,4 +117,28 @@ class UserRepository {
       return ApiResponse.error('Connection error: $e');
     }
   }
+
+  /// Delete / Deactivate current operator account on backend
+  Future<ApiResponse<Map<String, dynamic>>> deleteAccount() async {
+    try {
+      final response = await _client.delete(ApiEndpoints.deleteAccount);
+
+      if (response.isOk && response.body != null) {
+        await _storage.clearAll();
+        return ApiResponse.success(
+          response.body is Map<String, dynamic>
+              ? response.body as Map<String, dynamic>
+              : {'success': true},
+          statusCode: response.statusCode,
+        );
+      }
+
+      return ApiResponse.error(
+        _client.parseErrorMessage(response),
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse.error('Connection error: $e');
+    }
+  }
 }

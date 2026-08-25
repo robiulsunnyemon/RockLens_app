@@ -30,6 +30,8 @@ import '../modules/logging/bindings/logging_binding.dart';
 import '../modules/logging/views/logging_view.dart';
 import '../modules/export_hub/bindings/export_hub_binding.dart';
 import '../modules/export_hub/views/export_hub_view.dart';
+import '../modules/help_center/bindings/help_center_binding.dart';
+import '../modules/help_center/views/help_center_view.dart';
 
 part 'app_routes.dart';
 
@@ -118,6 +120,11 @@ class AppPages {
       name: _Paths.EXPORT_HUB,
       page: () => const ExportHubView(),
       binding: ExportHubBinding(),
+    ),
+    GetPage(
+      name: _Paths.HELP_CENTER,
+      page: () => const HelpCenterView(),
+      binding: HelpCenterBinding(),
     ),
   ];
 }

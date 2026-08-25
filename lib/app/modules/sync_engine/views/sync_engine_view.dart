@@ -13,54 +13,71 @@ class SyncEngineView extends GetView<SyncEngineController> {
     return Scaffold(
       backgroundColor: AppColors.litho,
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.only(
-            left: AppDimensions.p16,
-            right: AppDimensions.p16,
-            top: AppDimensions.p12,
-            bottom: AppDimensions.p32,
-          ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppDimensions.p16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
+              const SizedBox(height: AppDimensions.p10),
+
+              // 1. Header with Offline/Online Status Badge
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     'Sync Engine',
                     style: AppTypography.displayMedium.copyWith(
-                      fontSize: 20,
+                      fontSize: 19,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppDimensions.p8,
-                      vertical: AppDimensions.p4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.ember.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(AppDimensions.r8),
-                      border: Border.all(
-                        color: AppColors.ember.withValues(alpha: 0.25),
+                  Obx(() {
+                    final offline = controller.isOfflineMode.value;
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppDimensions.p8,
+                        vertical: 3,
                       ),
-                    ),
-                    child: Text(
-                      'OFFLINE',
-                      style: AppTypography.hudTicker.copyWith(
-                        color: AppColors.ember,
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
+                      decoration: BoxDecoration(
+                        color: offline
+                            ? AppColors.ember.withValues(alpha: 0.12)
+                            : AppColors.emerald.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(AppDimensions.r8),
+                        border: Border.all(
+                          color: offline
+                              ? AppColors.ember.withValues(alpha: 0.35)
+                              : AppColors.emerald.withValues(alpha: 0.35),
+                        ),
                       ),
-                    ),
-                  ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: offline ? AppColors.ember : AppColors.emerald,
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            offline ? 'OFFLINE' : 'CLOUD READY',
+                            style: AppTypography.hudTicker.copyWith(
+                              color: offline ? AppColors.ember : AppColors.emerald,
+                              fontSize: 8.5,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
                 ],
               ),
-              const SizedBox(height: AppDimensions.p16),
+              const SizedBox(height: AppDimensions.p12),
 
-              // Status Summary (3 Cards)
+              // 2. Status Summary (3 Metric Cards)
               Obx(() => Row(
                     children: [
                       _buildSummaryCard(
@@ -71,7 +88,7 @@ class SyncEngineView extends GetView<SyncEngineController> {
                       const SizedBox(width: AppDimensions.p8),
                       _buildSummaryCard(
                         label: 'QUEUED SIZE',
-                        value: '9.3 MB',
+                        value: controller.queuedSizeFormatted,
                         color: AppColors.ore,
                       ),
                       const SizedBox(width: AppDimensions.p8),
@@ -82,14 +99,14 @@ class SyncEngineView extends GetView<SyncEngineController> {
                       ),
                     ],
                   )),
-              const SizedBox(height: AppDimensions.p16),
+              const SizedBox(height: AppDimensions.p12),
 
-              // Controls Card
+              // 3. Controls Card (Cellular Toggle + Force Sync Button)
               Container(
-                padding: const EdgeInsets.all(AppDimensions.p16),
+                padding: const EdgeInsets.all(AppDimensions.p14),
                 decoration: BoxDecoration(
                   color: AppColors.surface,
-                  borderRadius: AppDimensions.radius20,
+                  borderRadius: AppDimensions.radius16,
                   border: Border.all(
                     color: AppColors.surfaceBorder,
                     width: 1,
@@ -100,25 +117,29 @@ class SyncEngineView extends GetView<SyncEngineController> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Cellular Data Sync',
-                              style: AppTypography.displayMedium.copyWith(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Cellular Data Sync',
+                                style: AppTypography.displayMedium.copyWith(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Use mobile data when WiFi unavailable',
-                              style: AppTypography.hudTicker.copyWith(
-                                color: AppColors.subtle,
-                                fontSize: 9.5,
+                              const SizedBox(height: 2),
+                              Text(
+                                'Use mobile network when WiFi is unavailable',
+                                style: AppTypography.hudTicker.copyWith(
+                                  color: AppColors.subtle,
+                                  fontSize: 9,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                         Obx(() => Switch(
                               value: controller.isCellularEnabled.value,
@@ -130,64 +151,65 @@ class SyncEngineView extends GetView<SyncEngineController> {
                             )),
                       ],
                     ),
-                    const SizedBox(height: AppDimensions.p12),
+                    const SizedBox(height: AppDimensions.p10),
 
                     // Force Sync Button
                     Obx(() {
                       final syncing = controller.isSyncing.value;
                       return SizedBox(
                         width: double.infinity,
-                        height: 46,
+                        height: 44,
                         child: ElevatedButton(
                           onPressed: syncing ? null : controller.forceBackgroundSync,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: syncing
-                                ? AppColors.surface
-                                : AppColors.ore,
-                            foregroundColor: syncing
-                                ? AppColors.ore
-                                : AppColors.litho,
+                            backgroundColor: syncing ? AppColors.surface : AppColors.ore,
+                            foregroundColor: syncing ? AppColors.ore : AppColors.litho,
                             shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppDimensions.r12),
+                              borderRadius: BorderRadius.circular(AppDimensions.r12),
                               side: BorderSide(
-                                color: syncing
-                                    ? AppColors.ore.withValues(alpha: 0.4)
-                                    : Colors.transparent,
+                                color: syncing ? AppColors.ore.withValues(alpha: 0.4) : Colors.transparent,
                               ),
                             ),
+                            elevation: 0,
                           ),
                           child: syncing
                               ? Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     const SizedBox(
-                                      width: 16,
-                                      height: 16,
+                                      width: 14,
+                                      height: 14,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                                AppColors.ore),
+                                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.ore),
                                       ),
                                     ),
                                     const SizedBox(width: AppDimensions.p8),
                                     Text(
-                                      'Background Sync Active...',
+                                      'Uploading Batch to Cloud...',
                                       style: AppTypography.buttonText.copyWith(
                                         color: AppColors.ore,
-                                        fontSize: 13,
+                                        fontSize: 12.5,
                                       ),
                                     ),
                                   ],
                                 )
-                              : Text(
-                                  'Force Background Sync',
-                                  style: AppTypography.buttonText.copyWith(
-                                    color: AppColors.litho,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.cloud_upload_outlined, size: 16, color: AppColors.litho),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      controller.pendingCount > 0
+                                          ? 'Force Background Sync (${controller.pendingCount})'
+                                          : 'Re-Sync All Scans to Cloud (${controller.items.length})',
+                                      style: AppTypography.buttonText.copyWith(
+                                        color: AppColors.litho,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                         ),
                       );
@@ -195,28 +217,25 @@ class SyncEngineView extends GetView<SyncEngineController> {
                   ],
                 ),
               ),
-              const SizedBox(height: AppDimensions.p16),
+              const SizedBox(height: AppDimensions.p12),
 
-              // Legend
+              // 4. Legend
               Row(
                 children: [
                   _buildLegendDot(color: AppColors.emerald, label: 'SYNCED'),
                   const SizedBox(width: AppDimensions.p12),
                   _buildLegendDot(color: AppColors.cyan, label: 'AI PROCESSING'),
                   const SizedBox(width: AppDimensions.p12),
-                  _buildLegendDot(
-                      color: const Color(0xFFFF9100),
-                      label: 'AWAITING CONN.'),
+                  _buildLegendDot(color: const Color(0xFFFF9100), label: 'AWAITING CONN.'),
                 ],
               ),
-              const SizedBox(height: AppDimensions.p12),
+              const SizedBox(height: AppDimensions.p10),
 
-              // Sync Table Header
+              // 5. Sync Table Header
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   SizedBox(
-                    width: 50,
+                    width: 65,
                     child: Text(
                       'ID',
                       style: AppTypography.hudTicker.copyWith(
@@ -253,20 +272,101 @@ class SyncEngineView extends GetView<SyncEngineController> {
                   ),
                 ],
               ),
-              const SizedBox(height: AppDimensions.p8),
+              const SizedBox(height: AppDimensions.p6),
 
-              // Sync Queue Items List
-              Obx(() => ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: controller.items.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: AppDimensions.p8),
-                    itemBuilder: (context, index) {
-                      final item = controller.items[index];
-                      return _buildSyncRow(item);
+              // 6. SCROLLABLE QUEUE LIST
+              Expanded(
+                child: Obx(() {
+                  final queue = controller.items;
+                  if (queue.isEmpty) {
+                    return Center(
+                      child: Text(
+                        'No field scans in queue.',
+                        style: AppTypography.bodySmall.copyWith(color: AppColors.muted),
+                      ),
+                    );
+                  }
+
+                  return ListView.separated(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.only(bottom: AppDimensions.p16),
+                    itemCount: queue.length,
+                    separatorBuilder: (_, index) => const SizedBox(height: AppDimensions.p8),
+                    itemBuilder: (context, idx) {
+                      final item = queue[idx];
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppDimensions.p12,
+                          vertical: AppDimensions.p10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: AppColors.surfaceBorder,
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            // ID
+                            SizedBox(
+                              width: 65,
+                              child: Text(
+                                item.id,
+                                style: AppTypography.monoTag.copyWith(
+                                  color: AppColors.quartz,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            // Mineral & Location
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.name,
+                                    style: AppTypography.displayMedium.copyWith(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    item.loc,
+                                    style: AppTypography.hudTicker.copyWith(
+                                      color: AppColors.subtle,
+                                      fontSize: 8.5,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Size
+                            SizedBox(
+                              width: 55,
+                              child: Text(
+                                item.size,
+                                style: AppTypography.hudTicker.copyWith(
+                                  color: AppColors.subtle,
+                                  fontSize: 9,
+                                ),
+                              ),
+                            ),
+                            // Status Badge
+                            _buildStatusBadge(item.status),
+                          ],
+                        ),
+                      );
                     },
-                  )),
+                  );
+                }),
+              ),
             ],
           ),
         ),
@@ -283,7 +383,7 @@ class SyncEngineView extends GetView<SyncEngineController> {
       child: Container(
         padding: const EdgeInsets.symmetric(
           horizontal: AppDimensions.p8,
-          vertical: AppDimensions.p12,
+          vertical: AppDimensions.p10,
         ),
         decoration: BoxDecoration(
           color: AppColors.surface,
@@ -294,12 +394,13 @@ class SyncEngineView extends GetView<SyncEngineController> {
           ),
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               value,
               style: AppTypography.displayMedium.copyWith(
                 color: color,
-                fontSize: 18,
+                fontSize: 16.5,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -321,138 +422,63 @@ class SyncEngineView extends GetView<SyncEngineController> {
 
   Widget _buildLegendDot({required Color color, required String label}) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: 6,
           height: 6,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: color,
-          ),
+          decoration: BoxDecoration(shape: BoxShape.circle, color: color),
         ),
         const SizedBox(width: 4),
         Text(
           label,
           style: AppTypography.hudTicker.copyWith(
             color: AppColors.subtle,
-            fontSize: 8.5,
+            fontSize: 7.5,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSyncRow(SyncQueueItem item) {
-    Color statusColor;
-    Color statusBg;
-    String statusLabel;
+  Widget _buildStatusBadge(String status) {
+    Color bg;
+    Color fg;
+    String text;
 
-    if (item.status == 'synced') {
-      statusColor = AppColors.emerald;
-      statusBg = AppColors.emerald.withValues(alpha: 0.1);
-      statusLabel = 'SYNCED';
-    } else if (item.status == 'processing') {
-      statusColor = AppColors.cyan;
-      statusBg = AppColors.cyan.withValues(alpha: 0.1);
-      statusLabel = 'AI PROCESSING';
-    } else {
-      statusColor = const Color(0xFFFF9100);
-      statusBg = const Color(0xFFFF9100).withValues(alpha: 0.1);
-      statusLabel = 'AWAITING CONN.';
+    switch (status) {
+      case 'synced':
+        bg = AppColors.emerald.withValues(alpha: 0.15);
+        fg = AppColors.emerald;
+        text = 'SYNCED';
+        break;
+      case 'processing':
+        bg = AppColors.cyan.withValues(alpha: 0.15);
+        fg = AppColors.cyan;
+        text = 'AI PROCESSING';
+        break;
+      case 'pending':
+      default:
+        bg = const Color(0xFFFF9100).withValues(alpha: 0.15);
+        fg = const Color(0xFFFF9100);
+        text = 'AWAITING CONN.';
+        break;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.p12,
-        vertical: AppDimensions.p12,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppDimensions.radius16,
-        border: Border.all(
-          color: AppColors.surfaceBorder,
-          width: 1,
-        ),
+        color: bg,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: fg.withValues(alpha: 0.4), width: 1),
       ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 48,
-            child: Text(
-              item.id,
-              style: AppTypography.monoTag.copyWith(
-                color: AppColors.subtle,
-                fontSize: 9,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.name,
-                  style: AppTypography.displayMedium.copyWith(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  item.loc,
-                  style: AppTypography.monoTag.copyWith(
-                    color: AppColors.subtle,
-                    fontSize: 8.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(
-            width: 50,
-            child: Text(
-              item.size,
-              style: AppTypography.hudTicker.copyWith(
-                color: AppColors.subtle,
-                fontSize: 9,
-              ),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppDimensions.p8,
-              vertical: AppDimensions.p4,
-            ),
-            decoration: BoxDecoration(
-              color: statusBg,
-              borderRadius: BorderRadius.circular(AppDimensions.r6),
-              border: Border.all(
-                color: statusColor.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 5,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: statusColor,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  statusLabel,
-                  style: AppTypography.hudTicker.copyWith(
-                    color: statusColor,
-                    fontSize: 7.5,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+      child: Text(
+        text,
+        style: AppTypography.hudTicker.copyWith(
+          color: fg,
+          fontSize: 7.5,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }

@@ -3,13 +3,9 @@
 abstract class ApiEndpoints {
   ApiEndpoints._();
 
-  // Base URL selection
-  // 1. With USB debugging + "adb reverse tcp:8000 tcp:8000", use 'http://127.0.0.1:8000'
-  // 2. Over local Wi-Fi network, use 'http://192.168.100.183:8000'
-  // 3. For Android Emulator only, use 'http://10.0.2.2:8000'
-  static String get baseUrl {
-    return 'http://127.0.0.1:8000';
-  }
+  // Base URL selection (Primary: PC LAN Wi-Fi IP, Secondary: localhost via ADB reverse)
+  static String baseUrl = 'http://192.168.100.183:8000';
+  static const String fallbackLocalUrl = 'http://127.0.0.1:8000';
 
   // API Version Prefix
   static const String apiV1 = '/api/v1';
@@ -25,6 +21,11 @@ abstract class ApiEndpoints {
   static const String userMe = '$apiV1/users/me';
   static const String userSettings = '$apiV1/users/me/settings';
   static const String userAvatar = '$apiV1/users/me/avatar';
+  static const String deleteAccount = '$apiV1/users/me';
+
+  // Specimens & Cloud Sync Endpoints
+  static const String syncBatch = '$apiV1/sync/batch';
+  static const String specimens = '$apiV1/specimens';
 
   // System Health
   static const String health = '/health';

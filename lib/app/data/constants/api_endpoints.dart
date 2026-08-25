@@ -4,8 +4,10 @@ abstract class ApiEndpoints {
   ApiEndpoints._();
 
   // Base URL selection (Primary: PC LAN Wi-Fi IP, Secondary: localhost via ADB reverse)
-  static String baseUrl = 'http://192.168.100.183:8000';
-  static const String fallbackLocalUrl = 'http://127.0.0.1:8000';
+  // static String baseUrl = 'http://192.168.100.183:8000';
+  static String baseUrl = 'http://rnszxgbajam1misuba74j3ap.72.61.169.133.sslip.io';
+  // static const String fallbackLocalUrl = 'http://127.0.0.1:8000';
+  static const String fallbackLocalUrl = 'http://rnszxgbajam1misuba74j3ap.72.61.169.133.sslip.io';
 
   // API Version Prefix
   static const String apiV1 = '/api/v1';

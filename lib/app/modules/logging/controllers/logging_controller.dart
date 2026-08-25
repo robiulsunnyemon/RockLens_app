@@ -10,7 +10,6 @@ import '../../../core/widgets/otzar_dialog.dart';
 import '../../../data/services/storage_service.dart';
 import '../../../data/services/tflite_classifier_service.dart';
 import '../../../routes/app_pages.dart';
-import '../../main_nav/controllers/main_nav_controller.dart';
 
 class LoggingController extends GetxController {
   final TfliteClassifierService _classifier = Get.find<TfliteClassifierService>();
@@ -225,10 +224,7 @@ class LoggingController extends GetxController {
       confirmText: 'View in Vault',
       type: OtzarDialogType.success,
       onConfirm: () {
-        if (Get.isRegistered<MainNavController>()) {
-          Get.find<MainNavController>().changePage(1); // Go to Vault tab
-        }
-        Get.offAllNamed(Routes.HOME);
+        Get.offAllNamed(Routes.HOME, arguments: {'tab': 1});
       },
     );
   }

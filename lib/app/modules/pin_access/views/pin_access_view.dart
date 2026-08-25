@@ -227,11 +227,7 @@ class PinAccessView extends GetView<PinAccessController> {
                                 );
                               }
                             }),
-                            const SizedBox(height: AppDimensions.p6),
-
-                            // Biometric Auth Option
-                            _BiometricButton(onTap: controller.onBiometricAuth),
-                            const SizedBox(height: AppDimensions.p8),
+                            const SizedBox(height: AppDimensions.p12),
                           ],
                         ),
                       ],
@@ -402,61 +398,6 @@ class _KeypadGrid extends StatelessWidget {
           );
         },
       ),
-    );
-  }
-}
-
-class _BiometricButton extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _BiometricButton({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Material(
-          
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            customBorder: const CircleBorder(),
-            child: Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.emeraldSubtle,
-                border: Border.all(
-                  color: AppColors.emerald.withValues(alpha: 0.35),
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.emerald.withValues(alpha: 0.1),
-                    blurRadius: 12,
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.fingerprint,
-                color: AppColors.emerald,
-                size: 28,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: AppDimensions.p6),
-        Text(
-          AppStrings.biometric,
-          style: AppTypography.monoTag.copyWith(
-            color: AppColors.emerald,
-            fontSize: 9.5,
-            letterSpacing: 1.2,
-          ),
-        ),
-      ],
     );
   }
 }

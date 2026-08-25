@@ -103,47 +103,12 @@ class EmailAccessView extends GetView<EmailAccessController> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               // Field Label
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    AppStrings.emailInputLabel,
-                                    style: AppTypography.monoTag.copyWith(
-                                      color: AppColors.ore,
-                                      fontSize: 10.5,
-                                    ),
-                                  ),
-                                  // Quick demo auto-fill hint
-                                  GestureDetector(
-                                    onTap: () {
-                                      controller.emailTextController.text =
-                                          'operator@otzar.geocore';
-                                      controller.onTextChanged('operator@otzar.geocore');
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: AppDimensions.p8,
-                                        vertical: AppDimensions.p2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.surface2,
-                                        borderRadius: BorderRadius.circular(AppDimensions.r4),
-                                        border: Border.all(
-                                          color: AppColors.ore.withValues(alpha: 0.3),
-                                          width: 0.8,
-                                        ),
-                                      ),
-                                      child: Text(
-                                        'DEMO EMAIL',
-                                        style: AppTypography.monoFooter.copyWith(
-                                          color: AppColors.oreLight,
-                                          fontSize: 8.5,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                              Text(
+                                AppStrings.emailInputLabel,
+                                style: AppTypography.monoTag.copyWith(
+                                  color: AppColors.ore,
+                                  fontSize: 10.5,
+                                ),
                               ),
                               const SizedBox(height: AppDimensions.p8),
 
@@ -306,6 +271,41 @@ class EmailAccessView extends GetView<EmailAccessController> {
                               );
                             }),
                             const SizedBox(height: AppDimensions.p16),
+
+                            // Biometric Fingerprint Icon
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: AppColors.emeraldSubtle,
+                                border: Border.all(
+                                  color: AppColors.emerald.withValues(alpha: 0.35),
+                                  width: 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.emerald.withValues(alpha: 0.12),
+                                    blurRadius: 12,
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.fingerprint,
+                                color: AppColors.emerald,
+                                size: 26,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              AppStrings.biometric,
+                              style: AppTypography.monoTag.copyWith(
+                                color: AppColors.emerald,
+                                fontSize: 8.5,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            const SizedBox(height: AppDimensions.p12),
 
                             // Security Note
                             Text(

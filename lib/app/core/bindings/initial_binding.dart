@@ -4,6 +4,7 @@ import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/user_repository.dart';
 
 import '../../data/services/tflite_classifier_service.dart';
+import '../../data/services/neural_model_sync_service.dart';
 
 class InitialBinding extends Bindings {
   @override
@@ -12,5 +13,6 @@ class InitialBinding extends Bindings {
     Get.lazyPut<AuthRepository>(() => AuthRepository(), fenix: true);
     Get.lazyPut<UserRepository>(() => UserRepository(), fenix: true);
     Get.lazyPut<TfliteClassifierService>(() => TfliteClassifierService(), fenix: true);
+    Get.lazyPut<NeuralModelSyncService>(() => NeuralModelSyncService(), fenix: true);
   }
 }

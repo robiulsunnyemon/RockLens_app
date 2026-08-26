@@ -126,6 +126,9 @@ class AuthRepository {
 
   /// Logout operator and clear stored tokens
   Future<void> logout() async {
+    try {
+      await _client.post(ApiEndpoints.logout, {});
+    } catch (_) {}
     await _storage.clearSession();
   }
 }

@@ -143,6 +143,20 @@ class StorageService extends GetxService {
     await _box.write(_keyDiscoveryLogs, logs);
   }
 
+  // Neural Model Versioning
+  static const String _keyActiveNeuralVersion = 'active_neural_version';
+  static const String _keyLastModelSyncDate = 'last_model_sync_date';
+
+  String get activeNeuralVersion => _box.read<String>(_keyActiveNeuralVersion) ?? 'v4.2.1';
+  Future<void> setActiveNeuralVersion(String version) async {
+    await _box.write(_keyActiveNeuralVersion, version);
+  }
+
+  String get lastModelSyncDate => _box.read<String>(_keyLastModelSyncDate) ?? '26 Aug 2026';
+  Future<void> setLastModelSyncDate(String date) async {
+    await _box.write(_keyLastModelSyncDate, date);
+  }
+
   // Clear session
   Future<void> clearSession() async {
     await _box.remove(_keyAccessToken);

@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/mineral_model.dart';
 
 /// Candidate recommendation with percentage confidence and theme accent color
@@ -77,10 +79,34 @@ class TfliteClassifierService extends GetxService {
     isModelLoaded.value = true;
   }
 
-  /// Load rich minerals database from JSON asset
+  /// Reload model, labels, and database on-the-fly (Hot Update)
+  Future<void> reloadModel() async {
+    isModelLoaded.value = false;
+    isDatabaseLoaded.value = false;
+    await loadDatabase();
+    await loadLabels();
+    isModelLoaded.value = true;
+  }
+
+  /// Load rich minerals database from dynamic storage or fallback JSON asset
   Future<void> loadDatabase() async {
     try {
-      final jsonString = await rootBundle.loadString('assets/data/minerals_db.json');
+      String jsonString = '';
+
+      // 1. Try loading from persistent OTA updated file system
+      try {
+        final docsDir = await getApplicationDocumentsDirectory();
+        final customDbFile = File('${docsDir.path}/neural_models/minerals_db.json');
+        if (customDbFile.existsSync()) {
+          jsonString = await customDbFile.readAsString();
+        }
+      } catch (_) {}
+
+      // 2. Fallback to bundled asset
+      if (jsonString.isEmpty) {
+        jsonString = await rootBundle.loadString('assets/data/minerals_db.json');
+      }
+
       final Map<String, dynamic> data = json.decode(jsonString);
       final Map<String, dynamic> mineralsMap = data['minerals'] ?? {};
 
@@ -95,10 +121,25 @@ class TfliteClassifierService extends GetxService {
     }
   }
 
-  /// Load labels list dynamically from asset
+  /// Load labels list dynamically from persistent OTA storage or asset
   Future<void> loadLabels() async {
     try {
-      final labelsData = await rootBundle.loadString('assets/model/labels.txt');
+      String labelsData = '';
+
+      // 1. Try loading from persistent OTA updated file system
+      try {
+        final docsDir = await getApplicationDocumentsDirectory();
+        final customLabelsFile = File('${docsDir.path}/neural_models/labels.txt');
+        if (customLabelsFile.existsSync()) {
+          labelsData = await customLabelsFile.readAsString();
+        }
+      } catch (_) {}
+
+      // 2. Fallback to bundled asset
+      if (labelsData.isEmpty) {
+        labelsData = await rootBundle.loadString('assets/model/labels.txt');
+      }
+
       _labels = labelsData
           .split('\n')
           .map((e) => e.trim().toLowerCase())

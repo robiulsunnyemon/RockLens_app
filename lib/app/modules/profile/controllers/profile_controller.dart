@@ -10,6 +10,7 @@ import '../../../data/models/user_model.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../data/repositories/user_repository.dart';
 import '../../../data/services/storage_service.dart';
+import '../../../data/services/neural_model_sync_service.dart';
 import '../../../routes/app_pages.dart';
 import '../../home/controllers/home_controller.dart';
 import '../../main_nav/controllers/main_nav_controller.dart';
@@ -137,6 +138,7 @@ class ProfileController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    neuralModelVersion.value = _storage.activeNeuralVersion;
     _initUserData();
     refreshDynamicStats();
     fetchLatestProfile();
@@ -1125,17 +1127,14 @@ class ProfileController extends GetxController {
                     onPressed: isCheckingNeuralUpdate.value || isDownloadingModel.value
                         ? null
                         : () async {
-                            isCheckingNeuralUpdate.value = true;
                             HapticFeedback.lightImpact();
-                            await Future.delayed(const Duration(milliseconds: 1000));
-                            isCheckingNeuralUpdate.value = false;
-                            neuralModelVersion.value = 'v4.3.0-geochem-rift';
-                            Get.snackbar(
-                              'Neural Engine Synchronized 🧠',
-                              'Classifier updated to v4.3.0 with African Rift Valley weights.',
-                              snackPosition: SnackPosition.BOTTOM,
-                              duration: const Duration(seconds: 3),
-                            );
+                            if (Get.isRegistered<NeuralModelSyncService>()) {
+                              final syncService = Get.find<NeuralModelSyncService>();
+                              isCheckingNeuralUpdate.value = true;
+                              await syncService.checkAndSyncModel(isUserInitiated: true);
+                              isCheckingNeuralUpdate.value = false;
+                              neuralModelVersion.value = _storage.activeNeuralVersion;
+                            }
                           },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.ore,
@@ -1662,6 +1661,12 @@ class ProfileController extends GetxController {
   Future<void> signOut() async {
     HapticFeedback.heavyImpact();
     await _authRepository.logout();
+    Get.snackbar(
+      'Session Terminated',
+      'Operator successfully logged out from Otzar Field Station.',
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 3),
+    );
     Get.offAllNamed(Routes.EMAIL_ACCESS);
   }
 

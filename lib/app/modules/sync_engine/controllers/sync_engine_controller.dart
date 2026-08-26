@@ -7,6 +7,7 @@ import '../../../data/constants/api_endpoints.dart';
 import '../../../data/repositories/user_repository.dart';
 import '../../../data/services/api_client.dart';
 import '../../../data/services/storage_service.dart';
+import '../../../data/services/neural_model_sync_service.dart';
 import '../../home/controllers/home_controller.dart';
 import '../../main_nav/controllers/main_nav_controller.dart';
 import '../../profile/controllers/profile_controller.dart';
@@ -487,6 +488,11 @@ class SyncEngineController extends GetxController {
         }
         syncedTodayCount.value = items.where((i) => i.status == 'synced').length;
         isOfflineMode.value = false;
+
+        // Also trigger Neural AI Model OTA background check
+        if (Get.isRegistered<NeuralModelSyncService>()) {
+          Get.find<NeuralModelSyncService>().checkAndSyncModel();
+        }
 
         Get.snackbar(
           'Cloud Sync Succeeded! 🚀',

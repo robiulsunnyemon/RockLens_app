@@ -16,6 +16,7 @@ abstract class ApiEndpoints {
   static const String refreshToken = '$apiV1/auth/refresh-token';
   static const String resendPin = '$apiV1/auth/resend-pin';
   static const String resetPin = '$apiV1/auth/reset-pin';
+  static const String logout = '$apiV1/auth/logout';
 
   // User & Profile Endpoints
   static const String userMe = '$apiV1/users/me';
@@ -26,6 +27,9 @@ abstract class ApiEndpoints {
   // Specimens & Cloud Sync Endpoints
   static const String syncBatch = '$apiV1/sync/batch';
   static const String specimens = '$apiV1/specimens';
+
+  // AI & Neural Model OTA Endpoints
+  static const String neuralModelLatest = '$apiV1/ai/neural-model-latest';
 
   // System Health
   static const String health = '/health';

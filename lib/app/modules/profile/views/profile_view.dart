@@ -509,43 +509,31 @@ class ProfileView extends GetView<ProfileController> {
                     ),
                     const SizedBox(height: AppDimensions.p20),
 
-                    // Lock Field Session Button
+                    // Logout Session Button
                     SizedBox(
                       width: double.infinity,
                       height: 48,
-                      child: ElevatedButton(
-                        onPressed: controller.lockSession,
+                      child: ElevatedButton.icon(
+                        onPressed: controller.signOut,
+                        icon: const Icon(Icons.logout_rounded, size: 18, color: AppColors.ember),
+                        label: Text(
+                          'LOGOUT',
+                          style: AppTypography.buttonText.copyWith(
+                            color: AppColors.ember,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.ember.withValues(alpha: 0.1),
                           foregroundColor: AppColors.ember,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(AppDimensions.r16),
                             side: BorderSide(
-                              color: AppColors.ember.withValues(alpha: 0.3),
+                              color: AppColors.ember.withValues(alpha: 0.35),
+                              width: 1.2,
                             ),
-                          ),
-                        ),
-                        child: Text(
-                          'Lock Field Session',
-                          style: AppTypography.buttonText.copyWith(
-                            color: AppColors.ember,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: AppDimensions.p12),
-
-                    // Sign out text action
-                    Center(
-                      child: TextButton(
-                        onPressed: controller.signOut,
-                        child: Text(
-                          'Sign Out Operator Account',
-                          style: AppTypography.hudTicker.copyWith(
-                            color: AppColors.subtle,
-                            fontSize: 10,
                           ),
                         ),
                       ),

@@ -14,6 +14,7 @@ class SpecimenItem {
   final String group;
   final String regions;
   final String? photo;
+  final Map<String, dynamic> rawLog;
 
   const SpecimenItem({
     required this.name,
@@ -27,7 +28,23 @@ class SpecimenItem {
     this.group = 'General',
     this.regions = 'Pan-African',
     this.photo,
+    this.rawLog = const {},
   });
+
+  Map<String, dynamic> toMap() {
+    if (rawLog.isNotEmpty) return rawLog;
+    return {
+      'name': name,
+      'formula': formula,
+      'conf': conf,
+      'grade': grade,
+      'date': date,
+      'loc': loc,
+      'synced': synced,
+      'photo': photo,
+      'photos': photo != null ? [photo] : [],
+    };
+  }
 }
 
 class VaultController extends GetxController {
@@ -77,6 +94,7 @@ class VaultController extends GetxController {
         group: 'My Scans',
         regions: 'Logged In Field',
         photo: photoPath,
+        rawLog: log,
       ));
     }
 

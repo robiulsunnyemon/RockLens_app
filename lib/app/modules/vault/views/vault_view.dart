@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/values/app_dimensions.dart';
+import '../../../core/widgets/specimen_details_sheet.dart';
 import '../controllers/vault_controller.dart';
 
 class VaultView extends GetView<VaultController> {
@@ -255,106 +256,110 @@ class VaultView extends GetView<VaultController> {
                       final item = specimens[index];
                       final color = Color(item.colorHex);
 
-                      return Container(
-                        padding: const EdgeInsets.all(AppDimensions.p12),
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: AppDimensions.radius20,
-                          border: Border.all(
-                            color: AppColors.surfaceBorder,
-                            width: 1,
+                      return GestureDetector(
+                        onTap: () => SpecimenDetailsSheet.show(context, data: item.toMap()),
+                        child: Container(
+                          padding: const EdgeInsets.all(AppDimensions.p12),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: AppDimensions.radius20,
+                            border: Border.all(
+                              color: AppColors.surfaceBorder,
+                              width: 1,
+                            ),
                           ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Vector Crystal or Real Photo Box
-                            Container(
-                              width: double.infinity,
-                              height: 64,
-                              decoration: BoxDecoration(
-                                color: color.withValues(alpha: 0.1),
-                                borderRadius: AppDimensions.radius12,
-                                border: Border.all(
-                                  color: color.withValues(alpha: 0.25),
-                                  width: 1,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Vector Crystal or Real Photo Box
+                              Container(
+                                width: double.infinity,
+                                height: 64,
+                                decoration: BoxDecoration(
+                                  color: color.withValues(alpha: 0.1),
+                                  borderRadius: AppDimensions.radius12,
+                                  border: Border.all(
+                                    color: color.withValues(alpha: 0.25),
+                                    width: 1,
+                                  ),
                                 ),
-                              ),
-                              child: (item.photo != null && item.photo!.isNotEmpty)
-                                  ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(AppDimensions.r12 - 1),
-                                      child: item.photo!.startsWith('http')
-                                          ? Image.network(
-                                              item.photo!,
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (ctx, err, stack) => Center(
-                                                child: Icon(Icons.diamond_outlined, size: 32, color: color),
+                                child: (item.photo != null && item.photo!.isNotEmpty)
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(AppDimensions.r12 - 1),
+                                        child: item.photo!.startsWith('http')
+                                            ? Image.network(
+                                                item.photo!,
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (ctx, err, stack) => Center(
+                                                  child: Icon(Icons.diamond_outlined, size: 32, color: color),
+                                                ),
+                                              )
+                                            : Image.file(
+                                                File(item.photo!),
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (ctx, err, stack) => Center(
+                                                  child: Icon(Icons.diamond_outlined, size: 32, color: color),
+                                                ),
                                               ),
-                                            )
-                                          : Image.file(
-                                              File(item.photo!),
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (ctx, err, stack) => Center(
-                                                child: Icon(Icons.diamond_outlined, size: 32, color: color),
-                                              ),
-                                            ),
-                                    )
-                                  : Center(
-                                      child: Icon(
-                                        Icons.diamond_outlined,
-                                        size: 32,
-                                        color: color,
+                                      )
+                                    : Center(
+                                        child: Icon(
+                                          Icons.diamond_outlined,
+                                          size: 32,
+                                          color: color,
+                                        ),
                                       ),
+                              ),
+                              const Spacer(),
+
+                              // Name & Formula
+                              Text(
+                                item.name,
+                                style: AppTypography.displayMedium.copyWith(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                item.formula,
+                                style: AppTypography.monoTag.copyWith(
+                                  color: AppColors.subtle,
+                                  fontSize: 9,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const Spacer(),
+
+                              // Bottom Row: Confidence & Sync Dot
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '${item.conf}% MATCH',
+                                    style: AppTypography.hudTicker.copyWith(
+                                      color: color,
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.bold,
                                     ),
-                            ),
-                            const Spacer(),
-
-                            // Name & Formula
-                            Text(
-                              item.name,
-                              style: AppTypography.displayMedium.copyWith(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            Text(
-                              item.formula,
-                              style: AppTypography.monoTag.copyWith(
-                                color: AppColors.subtle,
-                                fontSize: 8.5,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const Spacer(),
-
-                            // Match % & Sync Dot
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  '${item.conf}% MATCH',
-                                  style: AppTypography.hudTicker.copyWith(
-                                    color: color,
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.bold,
                                   ),
-                                ),
-                                Container(
-                                  width: 6,
-                                  height: 6,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: item.synced
-                                        ? AppColors.emerald
-                                        : AppColors.ember,
+                                  Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: item.synced
+                                          ? AppColors.emerald
+                                          : AppColors.ember,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     },
@@ -374,174 +379,177 @@ class VaultView extends GetView<VaultController> {
                     final item = specimens[index];
                     final color = Color(item.colorHex);
 
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppDimensions.p12,
-                        vertical: AppDimensions.p12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: AppDimensions.radius16,
-                        border: Border.all(
-                          color: AppColors.surfaceBorder,
-                          width: 1,
+                    return GestureDetector(
+                      onTap: () => SpecimenDetailsSheet.show(context, data: item.toMap()),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppDimensions.p12,
+                          vertical: AppDimensions.p12,
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              color: color.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(AppDimensions.r10),
-                              border: Border.all(
-                                color: color.withValues(alpha: 0.3),
-                                width: 1,
-                              ),
-                            ),
-                            child: (item.photo != null && item.photo!.isNotEmpty)
-                                ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(AppDimensions.r10 - 1),
-                                    child: item.photo!.startsWith('http')
-                                        ? Image.network(
-                                            item.photo!,
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (ctx, err, stack) => Center(
-                                              child: Container(
-                                                width: 12,
-                                                height: 12,
-                                                decoration: BoxDecoration(
-                                                  color: color,
-                                                  borderRadius: BorderRadius.circular(2),
-                                                ),
-                                              ),
-                                            ),
-                                          )
-                                        : Image.file(
-                                            File(item.photo!),
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (ctx, err, stack) => Center(
-                                              child: Container(
-                                                width: 12,
-                                                height: 12,
-                                                decoration: BoxDecoration(
-                                                  color: color,
-                                                  borderRadius: BorderRadius.circular(2),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                  )
-                                : Center(
-                                    child: Container(
-                                      width: 12,
-                                      height: 12,
-                                      decoration: BoxDecoration(
-                                        color: color,
-                                        borderRadius: BorderRadius.circular(2),
-                                      ),
-                                    ),
-                                  ),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: AppDimensions.radius16,
+                          border: Border.all(
+                            color: AppColors.surfaceBorder,
+                            width: 1,
                           ),
-                          const SizedBox(width: AppDimensions.p12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Flexible(
-                                      child: Text(
-                                        item.name,
-                                        style: AppTypography.displayMedium.copyWith(
-                                          fontSize: 13.5,
-                                          fontWeight: FontWeight.bold,
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(AppDimensions.r10),
+                                border: Border.all(
+                                  color: color.withValues(alpha: 0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: (item.photo != null && item.photo!.isNotEmpty)
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(AppDimensions.r10 - 1),
+                                      child: item.photo!.startsWith('http')
+                                          ? Image.network(
+                                              item.photo!,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (ctx, err, stack) => Center(
+                                                child: Container(
+                                                  width: 12,
+                                                  height: 12,
+                                                  decoration: BoxDecoration(
+                                                    color: color,
+                                                    borderRadius: BorderRadius.circular(2),
+                                                  ),
+                                                ),
+                                              ),
+                                            )
+                                          : Image.file(
+                                              File(item.photo!),
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (ctx, err, stack) => Center(
+                                                child: Container(
+                                                  width: 12,
+                                                  height: 12,
+                                                  decoration: BoxDecoration(
+                                                    color: color,
+                                                    borderRadius: BorderRadius.circular(2),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                    )
+                                  : Center(
+                                      child: Container(
+                                        width: 12,
+                                        height: 12,
+                                        decoration: BoxDecoration(
+                                          color: color,
+                                          borderRadius: BorderRadius.circular(2),
                                         ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
-                                    if (item.formula.isNotEmpty) ...[
-                                      const SizedBox(width: AppDimensions.p6),
+                            ),
+                            const SizedBox(width: AppDimensions.p12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
                                       Flexible(
                                         child: Text(
-                                          item.formula,
-                                          style: AppTypography.monoTag.copyWith(
+                                          item.name,
+                                          style: AppTypography.displayMedium.copyWith(
+                                            fontSize: 13.5,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      if (item.formula.isNotEmpty) ...[
+                                        const SizedBox(width: AppDimensions.p6),
+                                        Flexible(
+                                          child: Text(
+                                            item.formula,
+                                            style: AppTypography.monoTag.copyWith(
+                                              color: AppColors.subtle,
+                                              fontSize: 8.5,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        '${item.conf}%',
+                                        style: AppTypography.hudTicker.copyWith(
+                                          color: color,
+                                          fontSize: 9.5,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Text(
+                                          ' · ${item.loc} · ${item.date}',
+                                          style: AppTypography.hudTicker.copyWith(
                                             color: AppColors.subtle,
-                                            fontSize: 8.5,
+                                            fontSize: 9,
                                           ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
                                     ],
-                                  ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: AppDimensions.p8),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppDimensions.p6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surfaceBorder,
+                                    borderRadius: BorderRadius.circular(AppDimensions.r4),
+                                  ),
+                                  child: Text(
+                                    item.grade,
+                                    style: AppTypography.hudTicker.copyWith(
+                                      color: AppColors.subtle,
+                                      fontSize: 8,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
-                                const SizedBox(height: 2),
-                                Row(
-                                  children: [
-                                    Text(
-                                      '${item.conf}%',
-                                      style: AppTypography.hudTicker.copyWith(
-                                        color: color,
-                                        fontSize: 9.5,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: Text(
-                                        ' · ${item.loc} · ${item.date}',
-                                        style: AppTypography.hudTicker.copyWith(
-                                          color: AppColors.subtle,
-                                          fontSize: 9,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
+                                const SizedBox(height: 4),
+                                Container(
+                                  width: 6,
+                                  height: 6,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: item.synced
+                                        ? AppColors.emerald
+                                        : AppColors.ember,
+                                  ),
                                 ),
                               ],
                             ),
-                          ),
-                          const SizedBox(width: AppDimensions.p8),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppDimensions.p6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.surfaceBorder,
-                                  borderRadius: BorderRadius.circular(AppDimensions.r4),
-                                ),
-                                child: Text(
-                                  item.grade,
-                                  style: AppTypography.hudTicker.copyWith(
-                                    color: AppColors.subtle,
-                                    fontSize: 8,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Container(
-                                width: 6,
-                                height: 6,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: item.synced
-                                      ? AppColors.emerald
-                                      : AppColors.ember,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     );
                   },

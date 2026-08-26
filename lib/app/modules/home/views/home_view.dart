@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/values/app_assets.dart';
 import '../../../core/values/app_dimensions.dart';
+import '../../../core/widgets/specimen_details_sheet.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/hero_scan_card.dart';
 import '../widgets/hud_bar_widget.dart';
@@ -358,20 +359,25 @@ class HomeView extends GetView<HomeController> {
                       final scan = scans[idx];
                       final color = Color(scan['color'] as int);
 
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: AppDimensions.p8),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppDimensions.p12,
-                          vertical: AppDimensions.p10,
+                      return GestureDetector(
+                        onTap: () => SpecimenDetailsSheet.show(
+                          context,
+                          data: Map<String, dynamic>.from(scan['rawLog'] ?? scan),
                         ),
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: AppDimensions.radius16,
-                          border: Border.all(
-                            color: AppColors.surfaceBorder,
-                            width: 1,
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: AppDimensions.p8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppDimensions.p12,
+                            vertical: AppDimensions.p10,
                           ),
-                        ),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: AppDimensions.radius16,
+                            border: Border.all(
+                              color: AppColors.surfaceBorder,
+                              width: 1,
+                            ),
+                          ),
                         child: Row(
                           children: [
                             Container(
@@ -502,8 +508,9 @@ class HomeView extends GetView<HomeController> {
                             ),
                           ],
                         ),
-                      );
-                    },
+                      ),
+                    );
+                  },
                   );
                 }),
               ),

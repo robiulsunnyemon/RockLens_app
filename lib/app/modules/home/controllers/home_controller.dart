@@ -95,6 +95,7 @@ class HomeController extends GetxController {
           'time': log['date'] ?? 'Recent',
           'color': _getMineralColorHex(log['name'] as String? ?? ''),
           'photo': photoPath,
+          'rawLog': log,
         };
       }).toList();
 

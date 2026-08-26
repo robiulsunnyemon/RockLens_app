@@ -6,6 +6,7 @@ import '../../../core/widgets/offline_mode_sheet.dart';
 import '../../../core/widgets/otzar_dialog.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../data/services/storage_service.dart';
+import '../../../data/services/face_auth_service.dart';
 import '../../../routes/app_pages.dart';
 
 class EmailAccessController extends GetxController {
@@ -15,6 +16,9 @@ class EmailAccessController extends GetxController {
   final emailTextController = TextEditingController();
   final emailError = RxnString();
   final isLoading = false.obs;
+  final isFaceAuthenticating = false.obs;
+
+  bool get canUseFaceId => _storage.isFaceIdEnabled && _storage.savedBiometricToken != null;
 
   final emailRegex = RegExp(
     r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
@@ -26,6 +30,66 @@ class EmailAccessController extends GetxController {
     final lastEmail = _storage.lastEmail;
     if (lastEmail != null && lastEmail.isNotEmpty) {
       emailTextController.text = lastEmail;
+    }
+  }
+
+  /// 1-Tap Face ID Biometric Login
+  Future<void> loginWithFaceId() async {
+    if (!canUseFaceId) return;
+
+    try {
+      HapticFeedback.lightImpact();
+      final faceService = Get.isRegistered<FaceAuthService>()
+          ? Get.find<FaceAuthService>()
+          : Get.put(FaceAuthService());
+
+      final bool isFaceMatched = await faceService.authenticateFace(
+        localizedReason: 'Scan face to unlock Otzar Geological Vault instantly',
+      );
+
+      if (!isFaceMatched) return;
+
+      isFaceAuthenticating.value = true;
+      final biometricToken = _storage.savedBiometricToken!;
+
+      final result = await _authRepository.verifyBiometricToken(biometricToken);
+      isFaceAuthenticating.value = false;
+
+      if (result.isSuccess && result.data != null) {
+        final userName = result.data!.user.fullName;
+        Get.snackbar(
+          AppStrings.snackFaceIdAuthSuccessTitle,
+          AppStrings.snackFaceIdAuthSuccessMsg(userName),
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 3),
+        );
+        Get.offAllNamed(Routes.MAIN_NAV);
+      } else {
+        // If offline but face matched and local session exists, allow offline access
+        if (_storage.currentUser != null) {
+          final userName = _storage.currentUser!.fullName;
+          Get.snackbar(
+            AppStrings.snackOfflineFaceUnlockTitle,
+            AppStrings.snackOfflineFaceUnlockMsg(userName),
+            snackPosition: SnackPosition.BOTTOM,
+            duration: const Duration(seconds: 3),
+          );
+          Get.offAllNamed(Routes.MAIN_NAV);
+        } else {
+          OtzarDialog.show(
+            title: 'Face ID Verification',
+            message: result.message ?? 'Session expired. Please log in with your PIN.',
+            type: OtzarDialogType.error,
+          );
+        }
+      }
+    } catch (e) {
+      isFaceAuthenticating.value = false;
+      OtzarDialog.show(
+        title: 'Authentication Error',
+        message: 'Could not complete biometric authentication: $e',
+        type: OtzarDialogType.error,
+      );
     }
   }
 

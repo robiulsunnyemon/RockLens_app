@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/values/app_dimensions.dart';
+import '../../../core/values/app_strings.dart';
 import '../../../routes/app_pages.dart';
 import '../controllers/profile_controller.dart';
 
@@ -428,6 +429,14 @@ class ProfileView extends GetView<ProfileController> {
                           toggleObs: controller.isAutoSync,
                           onToggle: controller.toggleAutoSync,
                         ),
+                        _SettingsRow(
+                          icon: Icons.face_retouching_natural_rounded,
+                          iconColor: AppColors.ore,
+                          title: 'Face ID & Biometrics',
+                          subtitle: '1-tap facial recognition login',
+                          toggleObs: controller.isFaceIdEnabled,
+                          onToggle: controller.toggleFaceId,
+                        ),
                       ],
                     ),
                     const SizedBox(height: AppDimensions.p16),
@@ -448,8 +457,8 @@ class ProfileView extends GetView<ProfileController> {
                           subtitle: 'ArcGIS Enterprise · Connected',
                           showArrow: true,
                           onTap: () => Get.snackbar(
-                            'ArcGIS Enterprise',
-                            'Concession geological database connected via REST API.',
+                            AppStrings.snackArcGisTitle,
+                            AppStrings.snackArcGisMsg,
                             snackPosition: SnackPosition.BOTTOM,
                           ),
                         ),

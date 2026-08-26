@@ -17,6 +17,7 @@ abstract class ApiEndpoints {
   static const String resendPin = '$apiV1/auth/resend-pin';
   static const String resetPin = '$apiV1/auth/reset-pin';
   static const String logout = '$apiV1/auth/logout';
+  static const String biometricVerify = '$apiV1/auth/biometric-verify';
 
   // User & Profile Endpoints
   static const String userMe = '$apiV1/users/me';

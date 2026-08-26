@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
+import '../../core/values/app_strings.dart';
 import '../constants/api_endpoints.dart';
 import 'api_client.dart';
 import 'storage_service.dart';
@@ -50,8 +51,8 @@ class NeuralModelSyncService extends GetxService {
       if (!response.isOk || response.body == null || response.body['data'] == null) {
         if (isUserInitiated) {
           Get.snackbar(
-            'Neural Engine',
-            'Currently running local edge model (${activeModelVersion.value}).',
+            AppStrings.snackNeuralEngineTitle,
+            AppStrings.snackNeuralEngineRunningMsg(activeModelVersion.value),
             snackPosition: SnackPosition.BOTTOM,
             duration: const Duration(seconds: 3),
           );
@@ -115,8 +116,8 @@ class NeuralModelSyncService extends GetxService {
 
         if (isUserInitiated) {
           Get.snackbar(
-            'Neural Engine Upgraded! 🧠⚡',
-            'Successfully updated to model $cloudVersion without restarting.',
+            AppStrings.snackNeuralModelUpgradedTitle,
+            AppStrings.snackNeuralModelUpgradedMsg(cloudVersion),
             snackPosition: SnackPosition.BOTTOM,
             duration: const Duration(seconds: 4),
           );
@@ -126,8 +127,8 @@ class NeuralModelSyncService extends GetxService {
       } else {
         if (isUserInitiated) {
           Get.snackbar(
-            'AI Model Up to Date ✓',
-            'Inference engine is running the latest neural architecture ($localVersion).',
+            AppStrings.snackNeuralModelUpToDateTitle,
+            AppStrings.snackNeuralModelUpToDateMsg(localVersion),
             snackPosition: SnackPosition.BOTTOM,
             duration: const Duration(seconds: 3),
           );

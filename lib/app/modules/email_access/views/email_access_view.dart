@@ -269,37 +269,109 @@ class EmailAccessView extends GetView<EmailAccessController> {
                           ),
                         ),
 
-                        // 3. Bottom Biometric & Security Footer
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Biometric Fingerprint Icon
-                            Container(
-                              width: 48,
-                              height: 48,
+                        // 3. 1-Tap Face ID Quick Login Button (When Enabled)
+                        if (controller.canUseFaceId) ...[
+                          Row(
+                            children: [
+                              const Expanded(child: Divider(color: AppColors.surfaceBorder)),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                child: Text(AppStrings.orUseBiometrics, style: AppTypography.hudTicker.copyWith(color: AppColors.subtle, fontSize: 9.5)),
+                              ),
+                              const Expanded(child: Divider(color: AppColors.surfaceBorder)),
+                            ],
+                          ),
+                          const SizedBox(height: AppDimensions.p16),
+                          Obx(() {
+                            final isAuthenticating = controller.isFaceAuthenticating.value;
+                            return Container(
+                              width: double.infinity,
+                              height: 50,
                               decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: AppColors.emeraldSubtle,
-                                border: Border.all(
-                                  color: AppColors.emerald.withValues(alpha: 0.35),
-                                  width: 1.5,
-                                ),
+                                color: AppColors.ore.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: AppColors.ore.withValues(alpha: 0.45), width: 1.2),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.emerald.withValues(alpha: 0.12),
-                                    blurRadius: 12,
+                                    color: AppColors.ore.withValues(alpha: 0.12),
+                                    blurRadius: 14,
+                                    spreadRadius: 1,
                                   ),
                                 ],
                               ),
-                              child: const Icon(
-                                Icons.fingerprint,
-                                color: AppColors.emerald,
-                                size: 26,
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: isAuthenticating ? null : controller.loginWithFaceId,
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Center(
+                                    child: isAuthenticating
+                                        ? const SizedBox(
+                                            width: 22,
+                                            height: 22,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.ore),
+                                            ),
+                                          )
+                                        : Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              const Icon(Icons.face_retouching_natural_rounded, color: AppColors.ore, size: 22),
+                                              const SizedBox(width: 10),
+                                              Text(
+                                                AppStrings.oneTapFaceIdLogin,
+                                                style: AppTypography.buttonText.copyWith(
+                                                  color: AppColors.ore,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 13,
+                                                  letterSpacing: 1.1,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
+                          const SizedBox(height: AppDimensions.p16),
+                        ],
+
+                        // 4. Bottom Biometric & Security Footer
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Biometric Face ID Icon
+                            GestureDetector(
+                              onTap: controller.canUseFaceId ? controller.loginWithFaceId : null,
+                              child: Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppColors.emeraldSubtle,
+                                  border: Border.all(
+                                    color: AppColors.emerald.withValues(alpha: 0.35),
+                                    width: 1.5,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.emerald.withValues(alpha: 0.12),
+                                      blurRadius: 12,
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.face_retouching_natural_rounded,
+                                  color: AppColors.emerald,
+                                  size: 24,
+                                ),
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              AppStrings.biometric,
+                              AppStrings.faceIdBiometricProtected,
                               style: AppTypography.monoTag.copyWith(
                                 color: AppColors.emerald,
                                 fontSize: 8.5,

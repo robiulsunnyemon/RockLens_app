@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import '../../../core/values/app_strings.dart';
 import '../../../data/constants/api_endpoints.dart';
 import '../../../data/repositories/user_repository.dart';
 import '../../../data/services/api_client.dart';
@@ -219,10 +220,8 @@ class SyncEngineController extends GetxController {
     isCellularEnabled.value = !isCellularEnabled.value;
     _storage.setCellularSyncEnabled(isCellularEnabled.value);
     Get.snackbar(
-      isCellularEnabled.value ? 'Cellular Sync Enabled 📶' : 'WiFi-Only Mode 📡',
-      isCellularEnabled.value
-          ? 'Mobile network enabled for field uploads when WiFi unavailable.'
-          : 'Sync restricted to WiFi networks to save mobile data.',
+      AppStrings.snackCellularPolicyTitle,
+      AppStrings.snackCellularPolicyMsg(isCellularEnabled.value),
       snackPosition: SnackPosition.BOTTOM,
       duration: const Duration(seconds: 3),
     );
@@ -238,8 +237,8 @@ class SyncEngineController extends GetxController {
     items.refresh();
     _updateNavBadge();
     Get.snackbar(
-      'Queue Ready',
-      'All ${items.length} records staged for cloud synchronization.',
+      AppStrings.snackSyncConfigTitle,
+      AppStrings.snackAutoSyncTriggeredMsg(items.length),
       snackPosition: SnackPosition.BOTTOM,
       duration: const Duration(seconds: 2),
     );
@@ -325,8 +324,8 @@ class SyncEngineController extends GetxController {
               items.refresh();
             }
             Get.snackbar(
-              'Avatar Sync Notice',
-              res.message ?? 'Could not sync avatar with cloud server.',
+              AppStrings.snackAvatarErrorTitle,
+              res.message ?? AppStrings.snackAvatarUpdatedMsg,
               snackPosition: SnackPosition.BOTTOM,
             );
           }
@@ -362,8 +361,8 @@ class SyncEngineController extends GetxController {
       isSyncing.value = false;
       loadSyncQueue();
       Get.snackbar(
-        'Sync Complete ☁️',
-        'Operator credentials and records verified with cloud.',
+        AppStrings.snackAllItemsSyncedTitle,
+        AppStrings.snackAllItemsSyncedMsg,
         snackPosition: SnackPosition.BOTTOM,
         duration: const Duration(seconds: 2),
       );
@@ -495,8 +494,8 @@ class SyncEngineController extends GetxController {
         }
 
         Get.snackbar(
-          'Cloud Sync Succeeded! 🚀',
-          '${uploadTargets.length} specimen records successfully written to FastAPI Cloud Database.',
+          AppStrings.snackCloudSyncSuccessTitle,
+          AppStrings.snackCloudSyncSuccessMsg(uploadTargets.length),
           snackPosition: SnackPosition.BOTTOM,
           duration: const Duration(seconds: 4),
         );
@@ -509,8 +508,8 @@ class SyncEngineController extends GetxController {
         isOfflineMode.value = true;
 
         Get.snackbar(
-          'Sync Failed',
-          'Backend returned error: $errorMsg',
+          AppStrings.snackSyncNoticeTitle,
+          errorMsg,
           snackPosition: SnackPosition.BOTTOM,
           duration: const Duration(seconds: 4),
         );
@@ -525,8 +524,8 @@ class SyncEngineController extends GetxController {
       isOfflineMode.value = true;
 
       Get.snackbar(
-        'Server Unreachable',
-        'Cannot connect to backend at ${ApiEndpoints.baseUrl}. Ensure server is running.',
+        AppStrings.snackOfflineModeActiveTitle,
+        AppStrings.snackOfflineModeActiveMsg,
         snackPosition: SnackPosition.BOTTOM,
         duration: const Duration(seconds: 4),
       );

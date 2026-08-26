@@ -41,6 +41,7 @@ dependencies:
   geolocator: ^14.0.3
   flutter_compass: ^0.8.1
   path_provider: ^2.1.5
+  local_auth: ^2.3.0
 
 dev_dependencies:
   flutter_test:

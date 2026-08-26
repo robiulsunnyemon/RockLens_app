@@ -124,6 +124,38 @@ class AuthRepository {
     }
   }
 
+  /// Verify on-device biometric session token with FastAPI backend
+  Future<ApiResponse<AuthResponseModel>> verifyBiometricToken(String token) async {
+    try {
+      final response = await _client.post(
+        ApiEndpoints.biometricVerify,
+        {'refresh_token': token.trim()},
+      );
+
+      if (response.isOk && response.body != null) {
+        final authData = AuthResponseModel.fromJson(
+          response.body as Map<String, dynamic>,
+        );
+
+        await _storage.saveTokens(
+          accessToken: authData.accessToken,
+          refreshToken: authData.refreshToken,
+        );
+        await _storage.saveUser(authData.user);
+        await _storage.saveLastEmail(authData.user.email);
+
+        return ApiResponse.success(authData, statusCode: response.statusCode);
+      }
+
+      return ApiResponse.error(
+        _client.parseErrorMessage(response),
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse.error('Connection error: $e');
+    }
+  }
+
   /// Logout operator and clear stored tokens
   Future<void> logout() async {
     try {

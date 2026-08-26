@@ -34,6 +34,7 @@ class StorageService extends GetxService {
   }) async {
     await _box.write(_keyAccessToken, accessToken);
     await _box.write(_keyRefreshToken, refreshToken);
+    await _box.write(_keyBiometricToken, refreshToken);
   }
 
   Future<void> saveLastEmail(String email) async {
@@ -155,6 +156,20 @@ class StorageService extends GetxService {
   String get lastModelSyncDate => _box.read<String>(_keyLastModelSyncDate) ?? '26 Aug 2026';
   Future<void> setLastModelSyncDate(String date) async {
     await _box.write(_keyLastModelSyncDate, date);
+  }
+
+  // Face ID & Biometrics
+  static const String _keyFaceIdEnabled = 'face_id_enabled';
+  static const String _keyBiometricToken = 'biometric_session_token';
+
+  bool get isFaceIdEnabled => _box.read<bool>(_keyFaceIdEnabled) ?? false;
+  Future<void> setFaceIdEnabled(bool enabled) async {
+    await _box.write(_keyFaceIdEnabled, enabled);
+  }
+
+  String? get savedBiometricToken => _box.read<String>(_keyBiometricToken) ?? refreshToken;
+  Future<void> saveBiometricToken(String token) async {
+    await _box.write(_keyBiometricToken, token);
   }
 
   // Clear session

@@ -6,11 +6,13 @@ import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/values/app_dimensions.dart';
+import '../../../core/values/app_strings.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../data/repositories/user_repository.dart';
 import '../../../data/services/storage_service.dart';
 import '../../../data/services/neural_model_sync_service.dart';
+import '../../../data/services/face_auth_service.dart';
 import '../../../routes/app_pages.dart';
 import '../../home/controllers/home_controller.dart';
 import '../../main_nav/controllers/main_nav_controller.dart';
@@ -42,6 +44,7 @@ class ProfileController extends GetxController {
   final isSunlightMode = false.obs;
   final isVoiceLogging = true.obs;
   final isAutoSync = false.obs;
+  final isFaceIdEnabled = false.obs;
   final isLoading = false.obs;
   final isSavingProfile = false.obs;
   final isDeletingAccount = false.obs;
@@ -100,7 +103,7 @@ class ProfileController extends GetxController {
     ),
   ].obs;
 
-  // Avatar State
+  // Avatar Selection & Sync
   final userAvatarPath = RxnString();
   final userAvatarUrl = RxnString();
   final isUploadingAvatar = false.obs;
@@ -132,6 +135,8 @@ class ProfileController extends GetxController {
         : 'DR';
   }
 
+  String get operatorInitials => initials;
+
   double get storagePercentage =>
       (dynamicStorageUsedMb.value / dynamicStorageTotalMb.value).clamp(0.0, 1.0);
 
@@ -139,9 +144,24 @@ class ProfileController extends GetxController {
   void onInit() {
     super.onInit();
     neuralModelVersion.value = _storage.activeNeuralVersion;
+    isFaceIdEnabled.value = _storage.isFaceIdEnabled;
     _initUserData();
     refreshDynamicStats();
     fetchLatestProfile();
+  }
+
+  void toggleFaceId() {
+    final newValue = !isFaceIdEnabled.value;
+    HapticFeedback.lightImpact();
+    if (Get.isRegistered<FaceAuthService>()) {
+      final faceService = Get.find<FaceAuthService>();
+      faceService.setFaceIdEnabled(newValue).then((_) {
+        isFaceIdEnabled.value = _storage.isFaceIdEnabled;
+      });
+    } else {
+      _storage.setFaceIdEnabled(newValue);
+      isFaceIdEnabled.value = newValue;
+    }
   }
 
   void _initUserData() {
@@ -428,8 +448,8 @@ class ProfileController extends GetxController {
           Get.find<HomeController>().refreshUserData();
         }
         Get.snackbar(
-          'Avatar Synchronized ☁️',
-          'Profile photo uploaded and synced with Cloudinary.',
+          AppStrings.snackAvatarSyncSuccessTitle,
+          AppStrings.snackAvatarSyncSuccessMsg,
           snackPosition: SnackPosition.BOTTOM,
           duration: const Duration(seconds: 3),
         );
@@ -437,8 +457,8 @@ class ProfileController extends GetxController {
         // Offline / Unreachable -> Stage for background sync
         await _storage.setAvatarPendingSync(true, path: path);
         Get.snackbar(
-          'Saved Offline 💾',
-          'Avatar updated locally. Staged for cloud sync when connection returns.',
+          AppStrings.snackCachedLocallyTitle,
+          AppStrings.snackCachedLocallyMsg,
           snackPosition: SnackPosition.BOTTOM,
           duration: const Duration(seconds: 3),
         );
@@ -446,8 +466,8 @@ class ProfileController extends GetxController {
     } catch (e) {
       isUploadingAvatar.value = false;
       Get.snackbar(
-        'Avatar Error',
-        'Could not update photo: $e',
+        AppStrings.snackAvatarErrorTitle,
+        AppStrings.snackAvatarErrorMsg(e),
         snackPosition: SnackPosition.BOTTOM,
       );
     }
@@ -471,8 +491,8 @@ class ProfileController extends GetxController {
     }
 
     Get.snackbar(
-      'Avatar Removed',
-      'Reverted to operator initials badge.',
+      AppStrings.snackAvatarRemovedTitle,
+      AppStrings.snackAvatarRemovedMsg,
       snackPosition: SnackPosition.BOTTOM,
       duration: const Duration(seconds: 2),
     );
@@ -635,8 +655,8 @@ class ProfileController extends GetxController {
                                   Get.find<SyncEngineController>().loadSyncQueue();
                                 }
                                 Get.snackbar(
-                                  'Profile Updated 🚀',
-                                  'Operator credentials updated locally and on cloud database.',
+                                  AppStrings.snackProfileUpdatedTitle,
+                                  AppStrings.snackProfileUpdatedMsg,
                                   snackPosition: SnackPosition.BOTTOM,
                                   duration: const Duration(seconds: 3),
                                 );
@@ -646,8 +666,8 @@ class ProfileController extends GetxController {
                                   Get.find<SyncEngineController>().loadSyncQueue();
                                 }
                                 Get.snackbar(
-                                  'Cached Locally 💾',
-                                  'Updated on device. Staged for cloud sync when connection returns.',
+                                  AppStrings.snackCachedLocallyTitle,
+                                  AppStrings.snackCachedLocallyMsg,
                                   snackPosition: SnackPosition.BOTTOM,
                                   duration: const Duration(seconds: 3),
                                 );
@@ -835,8 +855,8 @@ class ProfileController extends GetxController {
                             gpsAccuracy.value = 0.8;
                             isCalibrating.value = false;
                             Get.snackbar(
-                              'Calibration Zeroed 🧭',
-                              'IMU & Gyroscope calibrated to true geological horizon.',
+                              AppStrings.snackCalibrationZeroedTitle,
+                              AppStrings.snackCalibrationZeroedMsg,
                               snackPosition: SnackPosition.BOTTOM,
                               duration: const Duration(seconds: 2),
                             );
@@ -1017,8 +1037,8 @@ class ProfileController extends GetxController {
                                         region.isDownloading.value = false;
                                         region.isDownloaded.value = true;
                                         Get.snackbar(
-                                          'Map Downloaded',
-                                          '${region.name} is now cached offline.',
+                                          AppStrings.snackOfflineMapStoredTitle,
+                                          AppStrings.snackOfflineMapStoredMsg(region.name, region.size),
                                           snackPosition: SnackPosition.BOTTOM,
                                           duration: const Duration(seconds: 2),
                                         );
@@ -1244,8 +1264,8 @@ class ProfileController extends GetxController {
                 onPressed: () {
                   Get.back();
                   Get.snackbar(
-                    'SOS Alert Broadcasted',
-                    'Current GPS fix and operator ID dispatched to base-camp radio.',
+                    AppStrings.snackSosAlertTitle,
+                    AppStrings.snackSosAlertMsg,
                     snackPosition: SnackPosition.BOTTOM,
                     backgroundColor: AppColors.ember.withValues(alpha: 0.2),
                     colorText: AppColors.ember,
@@ -1272,8 +1292,8 @@ class ProfileController extends GetxController {
     HapticFeedback.mediumImpact();
     refreshDynamicStats();
     Get.snackbar(
-      'Cache Optimized 🧹',
-      'Temporary cache and scan buffers cleaned. Storage freed.',
+      AppStrings.snackCacheOptimizedTitle,
+      AppStrings.snackCacheOptimizedMsg,
       snackPosition: SnackPosition.BOTTOM,
       duration: const Duration(seconds: 3),
     );
@@ -1609,8 +1629,8 @@ class ProfileController extends GetxController {
 
                                 if (result.isSuccess) {
                                   Get.snackbar(
-                                    'Account Deactivated',
-                                    'Your account and cloud telemetry have been queued for deletion.',
+                                    AppStrings.snackAccountDeactivatedTitle,
+                                    AppStrings.snackAccountDeactivatedMsg,
                                     snackPosition: SnackPosition.BOTTOM,
                                     duration: const Duration(seconds: 4),
                                   );
@@ -1618,8 +1638,8 @@ class ProfileController extends GetxController {
                                   Get.offAllNamed(Routes.EMAIL_ACCESS);
                                 } else {
                                   Get.snackbar(
-                                    'Deletion Request Queued',
-                                    'Session cleared. Admin notified of data erasure request.',
+                                    AppStrings.snackDeletionQueuedTitle,
+                                    AppStrings.snackDeletionQueuedMsg,
                                     snackPosition: SnackPosition.BOTTOM,
                                     duration: const Duration(seconds: 4),
                                   );
@@ -1662,8 +1682,8 @@ class ProfileController extends GetxController {
     HapticFeedback.heavyImpact();
     await _authRepository.logout();
     Get.snackbar(
-      'Session Terminated',
-      'Operator successfully logged out from Otzar Field Station.',
+      AppStrings.snackSessionTerminatedTitle,
+      AppStrings.snackSessionTerminatedMsg,
       snackPosition: SnackPosition.BOTTOM,
       duration: const Duration(seconds: 3),
     );

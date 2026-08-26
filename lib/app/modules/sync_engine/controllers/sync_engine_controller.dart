@@ -59,10 +59,15 @@ class SyncEngineController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    isCellularEnabled.value = _storage.isCellularSyncEnabled;
     loadSyncQueue();
     checkBackendConnectivity().then((_) {
       if (!isOfflineMode.value) {
-        fetchCloudSpecimens();
+        fetchCloudSpecimens().then((_) {
+          if (pendingCount > 0) {
+            forceBackgroundSync();
+          }
+        });
       }
     });
   }
@@ -211,6 +216,15 @@ class SyncEngineController extends GetxController {
   void toggleCellular() {
     HapticFeedback.lightImpact();
     isCellularEnabled.value = !isCellularEnabled.value;
+    _storage.setCellularSyncEnabled(isCellularEnabled.value);
+    Get.snackbar(
+      isCellularEnabled.value ? 'Cellular Sync Enabled 📶' : 'WiFi-Only Mode 📡',
+      isCellularEnabled.value
+          ? 'Mobile network enabled for field uploads when WiFi unavailable.'
+          : 'Sync restricted to WiFi networks to save mobile data.',
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 3),
+    );
   }
 
   /// Reset all stored logs to pending so user can force push them to backend
@@ -360,6 +374,67 @@ class SyncEngineController extends GetxController {
       item.status = 'processing';
     }
     items.refresh();
+
+    // 2. Upload local specimen photos to Cloudinary CDN before batch syncing
+    for (final item in uploadTargets) {
+      final raw = item.rawData;
+      final rawPhotos = raw['photos'];
+      if (rawPhotos is List && rawPhotos.isNotEmpty) {
+        final List<String> updatedPhotos = [];
+        bool hasCloudinaryUpload = false;
+
+        for (final p in rawPhotos) {
+          final photoStr = p.toString();
+          if (photoStr.startsWith('http://') || photoStr.startsWith('https://')) {
+            updatedPhotos.add(photoStr);
+          } else {
+            final file = File(photoStr);
+            if (file.existsSync()) {
+              try {
+                final form = FormData({
+                  'file': MultipartFile(
+                    file.readAsBytesSync(),
+                    filename: 'specimen_${item.id.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '')}.jpg',
+                    contentType: 'image/jpeg',
+                  ),
+                  'tag': item.id,
+                });
+
+                var uploadRes = await _apiClient.post(
+                  '${ApiEndpoints.apiV1}/specimens/upload-photo',
+                  form,
+                );
+
+                if (!uploadRes.isOk) {
+                  _apiClient.baseUrl = ApiEndpoints.fallbackLocalUrl;
+                  uploadRes = await _apiClient.post(
+                    '${ApiEndpoints.apiV1}/specimens/upload-photo',
+                    form,
+                  );
+                }
+
+                if (uploadRes.isOk && uploadRes.body is Map && uploadRes.body['url'] != null) {
+                  final cloudUrl = uploadRes.body['url'].toString();
+                  updatedPhotos.add(cloudUrl);
+                  hasCloudinaryUpload = true;
+                } else {
+                  updatedPhotos.add(photoStr);
+                }
+              } catch (_) {
+                updatedPhotos.add(photoStr);
+              }
+            } else {
+              updatedPhotos.add(photoStr);
+            }
+          }
+        }
+
+        if (hasCloudinaryUpload) {
+          raw['photos'] = updatedPhotos;
+          await _storage.updateDiscoveryLogPhotos(item.id, updatedPhotos);
+        }
+      }
+    }
 
     final syncPayload = {
       'device_id': 'RMX3933-ANDROID',

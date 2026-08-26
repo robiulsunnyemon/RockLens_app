@@ -202,19 +202,30 @@ class ProcessingView extends GetView<ProcessingController> {
                 ),
                 const SizedBox(height: AppDimensions.p24),
 
-                // 4-Step Indicators: Capture -> Analyze -> Identify -> Log
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildStepDot(1, 'Capture', isDone: true, isActive: false),
-                    _buildStepLine(isDone: true),
-                    _buildStepDot(2, 'Analyze', isDone: false, isActive: true),
-                    _buildStepLine(isDone: false),
-                    _buildStepDot(3, 'Identify', isDone: false, isActive: false),
-                    _buildStepLine(isDone: false),
-                    _buildStepDot(4, 'Log', isDone: false, isActive: false),
-                  ],
-                ),
+                // Dynamic 4-Step Indicators: Capture -> Analyze -> Identify -> Log
+                Obx(() {
+                  final p = controller.progress.value;
+                  final s1Done = true;
+                  final s2Done = p >= 35;
+                  final s2Active = p < 35;
+                  final s3Done = p >= 75;
+                  final s3Active = p >= 35 && p < 75;
+                  final s4Done = p >= 100;
+                  final s4Active = p >= 75 && p < 100;
+
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildStepDot(1, 'Capture', isDone: s1Done, isActive: false),
+                      _buildStepLine(isDone: s2Done || s2Active),
+                      _buildStepDot(2, 'Analyze', isDone: s2Done, isActive: s2Active),
+                      _buildStepLine(isDone: s3Done || s3Active),
+                      _buildStepDot(3, 'Identify', isDone: s3Done, isActive: s3Active),
+                      _buildStepLine(isDone: s4Done || s4Active),
+                      _buildStepDot(4, 'Log', isDone: s4Done, isActive: s4Active),
+                    ],
+                  );
+                }),
               ],
             ),
           ),

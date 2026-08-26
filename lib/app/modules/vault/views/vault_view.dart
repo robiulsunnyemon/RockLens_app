@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_colors.dart';
@@ -267,7 +268,7 @@ class VaultView extends GetView<VaultController> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Vector Crystal Icon Box
+                            // Vector Crystal or Real Photo Box
                             Container(
                               width: double.infinity,
                               height: 64,
@@ -279,13 +280,32 @@ class VaultView extends GetView<VaultController> {
                                   width: 1,
                                 ),
                               ),
-                              child: Center(
-                                child: Icon(
-                                  Icons.diamond_outlined,
-                                  size: 32,
-                                  color: color,
-                                ),
-                              ),
+                              child: (item.photo != null && item.photo!.isNotEmpty)
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(AppDimensions.r12 - 1),
+                                      child: item.photo!.startsWith('http')
+                                          ? Image.network(
+                                              item.photo!,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (ctx, err, stack) => Center(
+                                                child: Icon(Icons.diamond_outlined, size: 32, color: color),
+                                              ),
+                                            )
+                                          : Image.file(
+                                              File(item.photo!),
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (ctx, err, stack) => Center(
+                                                child: Icon(Icons.diamond_outlined, size: 32, color: color),
+                                              ),
+                                            ),
+                                    )
+                                  : Center(
+                                      child: Icon(
+                                        Icons.diamond_outlined,
+                                        size: 32,
+                                        color: color,
+                                      ),
+                                    ),
                             ),
                             const Spacer(),
 
@@ -375,17 +395,54 @@ class VaultView extends GetView<VaultController> {
                             decoration: BoxDecoration(
                               color: color.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(AppDimensions.r10),
-                            ),
-                            child: Center(
-                              child: Container(
-                                width: 12,
-                                height: 12,
-                                decoration: BoxDecoration(
-                                  color: color,
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
+                              border: Border.all(
+                                color: color.withValues(alpha: 0.3),
+                                width: 1,
                               ),
                             ),
+                            child: (item.photo != null && item.photo!.isNotEmpty)
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(AppDimensions.r10 - 1),
+                                    child: item.photo!.startsWith('http')
+                                        ? Image.network(
+                                            item.photo!,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (ctx, err, stack) => Center(
+                                              child: Container(
+                                                width: 12,
+                                                height: 12,
+                                                decoration: BoxDecoration(
+                                                  color: color,
+                                                  borderRadius: BorderRadius.circular(2),
+                                                ),
+                                              ),
+                                            ),
+                                          )
+                                        : Image.file(
+                                            File(item.photo!),
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (ctx, err, stack) => Center(
+                                              child: Container(
+                                                width: 12,
+                                                height: 12,
+                                                decoration: BoxDecoration(
+                                                  color: color,
+                                                  borderRadius: BorderRadius.circular(2),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                  )
+                                : Center(
+                                    child: Container(
+                                      width: 12,
+                                      height: 12,
+                                      decoration: BoxDecoration(
+                                        color: color,
+                                        borderRadius: BorderRadius.circular(2),
+                                      ),
+                                    ),
+                                  ),
                           ),
                           const SizedBox(width: AppDimensions.p12),
                           Expanded(

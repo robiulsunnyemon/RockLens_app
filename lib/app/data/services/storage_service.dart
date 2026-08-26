@@ -13,6 +13,7 @@ class StorageService extends GetxService {
   static const String _keyLocalAvatarPath = 'local_avatar_path';
   static const String _keyAvatarPendingSync = 'avatar_pending_sync';
   static const String _keyPendingAvatarPath = 'pending_avatar_path';
+  static const String _keyCellularSync = 'cellular_sync_enabled';
 
   Future<StorageService> init() async {
     await GetStorage.init();
@@ -91,6 +92,13 @@ class StorageService extends GetxService {
     await _box.write(_keyProfilePendingSync, pending);
   }
 
+  // Cellular Sync Preference
+  bool get isCellularSyncEnabled => _box.read<bool>(_keyCellularSync) ?? true;
+
+  Future<void> setCellularSyncEnabled(bool enabled) async {
+    await _box.write(_keyCellularSync, enabled);
+  }
+
   static const String _keyDiscoveryLogs = 'discovery_logs';
 
   // Discovery Logs
@@ -110,6 +118,17 @@ class StorageService extends GetxService {
     final logs = getDiscoveryLogs();
     for (final l in logs) {
       if (tags.contains(l['tag'])) {
+        l['synced'] = true;
+      }
+    }
+    await _box.write(_keyDiscoveryLogs, logs);
+  }
+
+  Future<void> updateDiscoveryLogPhotos(String tag, List<String> photos) async {
+    final logs = getDiscoveryLogs();
+    for (final l in logs) {
+      if (l['tag'] == tag) {
+        l['photos'] = photos;
         l['synced'] = true;
       }
     }

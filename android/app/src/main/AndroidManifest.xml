@@ -9,7 +9,7 @@
     <uses-feature android:name="android.hardware.camera.flash" android:required="false" />
 
     <application
-        android:label="otzar_app"
+        android:label="OTZAR APP"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

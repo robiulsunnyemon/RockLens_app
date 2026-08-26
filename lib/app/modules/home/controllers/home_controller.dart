@@ -84,6 +84,9 @@ class HomeController extends GetxController {
         }
         totalVal += 600.0;
 
+        final photos = log['photos'] as List<dynamic>?;
+        final photoPath = (photos != null && photos.isNotEmpty) ? photos.first.toString() : null;
+
         return {
           'name': log['name'] ?? 'Specimen',
           'formula': log['formula'] ?? 'Mineral',
@@ -91,6 +94,7 @@ class HomeController extends GetxController {
           'grade': log['grade'] ?? 'Specimen',
           'time': log['date'] ?? 'Recent',
           'color': _getMineralColorHex(log['name'] as String? ?? ''),
+          'photo': photoPath,
         };
       }).toList();
 

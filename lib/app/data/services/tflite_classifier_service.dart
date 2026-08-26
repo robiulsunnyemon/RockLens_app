@@ -62,6 +62,7 @@ class TfliteClassifierService extends GetxService {
 
   // Active classification output accessible across controllers
   final Rx<MineralClassificationResult?> activeResult = Rx<MineralClassificationResult?>(null);
+  final RxnString capturedPhotoPath = RxnString();
 
   @override
   void onInit() {

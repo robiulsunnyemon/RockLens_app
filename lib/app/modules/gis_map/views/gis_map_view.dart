@@ -346,7 +346,67 @@ class GisMapView extends GetView<GisMapController> {
                 );
               }
 
-              if (pin == null || !isOpen) return const SizedBox.shrink();
+              if (pin == null || !isOpen) {
+                return Positioned(
+                  bottom: 16,
+                  left: 16,
+                  right: 16,
+                  child: GestureDetector(
+                    onTap: () {
+                      if (pin != null) {
+                        controller.isDrawerOpen.value = true;
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface.withValues(alpha: 0.92),
+                        borderRadius: AppDimensions.radius16,
+                        border: Border.all(
+                          color: AppColors.surfaceBorder,
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.5),
+                            blurRadius: 16,
+                            offset: const Offset(0, -4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Row(
+                              children: [
+                                const Icon(Icons.explore_outlined, color: AppColors.ore, size: 16),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    pin != null
+                                        ? 'TAP TO EXPAND: ${pin.name.toUpperCase()}'
+                                        : 'TAP ANY PIN ON MAP TO INSPECT',
+                                    style: AppTypography.hudTicker.copyWith(
+                                      color: AppColors.subtle,
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.5,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.keyboard_arrow_up_rounded, color: AppColors.ore, size: 20),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }
 
               final color = Color(pin.colorHex);
               final dist = controller.calculateDistanceTo(pin);
@@ -397,13 +457,21 @@ class GisMapView extends GetView<GisMapController> {
                                   child: pin.photoPath != null
                                       ? ClipRRect(
                                           borderRadius: BorderRadius.circular(AppDimensions.r10 - 1),
-                                          child: Image.file(
-                                            File(pin.photoPath!),
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (ctx, err, stack) => Center(
-                                              child: Icon(Icons.diamond_outlined, color: color, size: 18),
-                                            ),
-                                          ),
+                                          child: pin.photoPath!.startsWith('http')
+                                              ? Image.network(
+                                                  pin.photoPath!,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (ctx, err, stack) => Center(
+                                                    child: Icon(Icons.diamond_outlined, color: color, size: 18),
+                                                  ),
+                                                )
+                                              : Image.file(
+                                                  File(pin.photoPath!),
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (ctx, err, stack) => Center(
+                                                    child: Icon(Icons.diamond_outlined, color: color, size: 18),
+                                                  ),
+                                                ),
                                         )
                                       : Center(
                                           child: Icon(Icons.diamond_outlined, color: color, size: 18),

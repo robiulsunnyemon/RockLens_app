@@ -94,6 +94,12 @@ class LoggingController extends GetxController {
       confidenceScore.value = active.confidencePercentage;
     }
 
+    // Auto-attach 1st captured scan photo if present
+    final captured = _classifier.capturedPhotoPath.value;
+    if (captured != null && captured.isNotEmpty && !specimenPhotos.contains(captured)) {
+      specimenPhotos.add(captured);
+    }
+
     // Set real-time date and time
     final now = DateTime.now();
     final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -221,7 +227,12 @@ class LoggingController extends GetxController {
     await _storage.saveDiscoveryLog(discoveryItem);
 
     if (Get.isRegistered<SyncEngineController>()) {
-      Get.find<SyncEngineController>().loadSyncQueue();
+      final syncEngine = Get.find<SyncEngineController>();
+      syncEngine.loadSyncQueue();
+      // Auto-Sync in background if connected
+      if (!syncEngine.isOfflineMode.value) {
+        syncEngine.forceBackgroundSync();
+      }
     }
     if (Get.isRegistered<HomeController>()) {
       Get.find<HomeController>().loadRecentScans();

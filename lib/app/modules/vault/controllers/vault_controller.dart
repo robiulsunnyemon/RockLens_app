@@ -13,6 +13,7 @@ class SpecimenItem {
   final String loc;
   final String group;
   final String regions;
+  final String? photo;
 
   const SpecimenItem({
     required this.name,
@@ -25,6 +26,7 @@ class SpecimenItem {
     required this.loc,
     this.group = 'General',
     this.regions = 'Pan-African',
+    this.photo,
   });
 }
 
@@ -60,6 +62,9 @@ class VaultController extends GetxController {
     final userLogs = _storage.getDiscoveryLogs();
     for (final log in userLogs) {
       final name = log['name'] as String? ?? 'Logged Specimen';
+      final photos = log['photos'] as List<dynamic>?;
+      final photoPath = (photos != null && photos.isNotEmpty) ? photos.first.toString() : null;
+
       items.add(SpecimenItem(
         name: name,
         formula: log['formula'] as String? ?? 'Mineral',
@@ -71,6 +76,7 @@ class VaultController extends GetxController {
         loc: log['loc'] as String? ?? 'Discovery Zone',
         group: 'My Scans',
         regions: 'Logged In Field',
+        photo: photoPath,
       ));
     }
 

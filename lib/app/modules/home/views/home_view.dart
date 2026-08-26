@@ -56,7 +56,7 @@ class HomeView extends GetView<HomeController> {
                         ),
                         const SizedBox(height: 2),
                         Obx(() => Text(
-                              'Good afternoon, ${controller.operatorName}',
+                              'Hello, ${controller.operatorName}',
                               style: AppTypography.displayMedium.copyWith(
                                 fontSize: 17,
                                 fontWeight: FontWeight.bold,
@@ -375,22 +375,59 @@ class HomeView extends GetView<HomeController> {
                         child: Row(
                           children: [
                             Container(
-                              width: 36,
-                              height: 36,
+                              width: 38,
+                              height: 38,
                               decoration: BoxDecoration(
                                 color: color.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(AppDimensions.r10),
-                              ),
-                              child: Center(
-                                child: Container(
-                                  width: 12,
-                                  height: 12,
-                                  decoration: BoxDecoration(
-                                    color: color,
-                                    borderRadius: BorderRadius.circular(2),
-                                  ),
+                                border: Border.all(
+                                  color: color.withValues(alpha: 0.3),
+                                  width: 1,
                                 ),
                               ),
+                              child: (scan['photo'] != null && (scan['photo'] as String).isNotEmpty)
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(AppDimensions.r10 - 1),
+                                      child: (scan['photo'] as String).startsWith('http')
+                                          ? Image.network(
+                                              scan['photo'] as String,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (ctx, err, stack) => Center(
+                                                child: Container(
+                                                  width: 12,
+                                                  height: 12,
+                                                  decoration: BoxDecoration(
+                                                    color: color,
+                                                    borderRadius: BorderRadius.circular(2),
+                                                  ),
+                                                ),
+                                              ),
+                                            )
+                                          : Image.file(
+                                              File(scan['photo'] as String),
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (ctx, err, stack) => Center(
+                                                child: Container(
+                                                  width: 12,
+                                                  height: 12,
+                                                  decoration: BoxDecoration(
+                                                    color: color,
+                                                    borderRadius: BorderRadius.circular(2),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                    )
+                                  : Center(
+                                      child: Container(
+                                        width: 12,
+                                        height: 12,
+                                        decoration: BoxDecoration(
+                                          color: color,
+                                          borderRadius: BorderRadius.circular(2),
+                                        ),
+                                      ),
+                                    ),
                             ),
                             const SizedBox(width: AppDimensions.p12),
                             Expanded(

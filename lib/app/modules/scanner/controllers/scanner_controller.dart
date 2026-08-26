@@ -6,6 +6,7 @@ import 'package:flutter_compass/flutter_compass.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../data/services/tflite_classifier_service.dart';
 import '../../../routes/app_pages.dart';
 
 enum ScanMode { single, burst }
@@ -272,6 +273,9 @@ class ScannerController extends GetxController {
         maxHeight: 1024,
       );
       if (image != null) {
+        if (Get.isRegistered<TfliteClassifierService>()) {
+          Get.find<TfliteClassifierService>().capturedPhotoPath.value = image.path;
+        }
         captureAndAnalyze();
       }
     } catch (e) {
@@ -290,7 +294,10 @@ class ScannerController extends GetxController {
 
     if (cameraController != null && isCameraInitialized.value) {
       try {
-        await cameraController!.takePicture();
+        final XFile picture = await cameraController!.takePicture();
+        if (Get.isRegistered<TfliteClassifierService>()) {
+          Get.find<TfliteClassifierService>().capturedPhotoPath.value = picture.path;
+        }
       } catch (e) {
         if (kDebugMode) {
           print('Capture error: $e');

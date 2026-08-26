@@ -42,7 +42,7 @@ class EmailAccessView extends GetView<EmailAccessController> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Top Header Section
+                        // 1. Top Header Section
                         Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -96,9 +96,9 @@ class EmailAccessView extends GetView<EmailAccessController> {
                           ],
                         ),
 
-                        // Form & Input Section
+                        // 2. Unified Input & Submit Button Card
                         Padding(
-                          padding: const EdgeInsets.symmetric(vertical: AppDimensions.p24),
+                          padding: const EdgeInsets.symmetric(vertical: AppDimensions.p20),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -208,70 +208,71 @@ class EmailAccessView extends GetView<EmailAccessController> {
                                   ),
                                 );
                               }),
+
+                              const SizedBox(height: AppDimensions.p20),
+
+                              // Submit Button (Placed right below input)
+                              Obx(() {
+                                final loading = controller.isLoading.value;
+                                return Container(
+                                  width: double.infinity,
+                                  height: AppDimensions.buttonHeight,
+                                  decoration: BoxDecoration(
+                                    gradient: AppColors.goldGradient,
+                                    borderRadius: AppDimensions.radius16,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.ore.withValues(alpha: 0.3),
+                                        blurRadius: 16,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: loading ? null : controller.submitEmail,
+                                      borderRadius: AppDimensions.radius16,
+                                      child: Center(
+                                        child: loading
+                                            ? const SizedBox(
+                                                width: 22,
+                                                height: 22,
+                                                child: CircularProgressIndicator(
+                                                  strokeWidth: 2.5,
+                                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                                    AppColors.litho,
+                                                  ),
+                                                ),
+                                              )
+                                            : Row(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  Text(
+                                                    AppStrings.emailSubmitBtn,
+                                                    style: AppTypography.buttonText,
+                                                  ),
+                                                  const SizedBox(width: AppDimensions.p8),
+                                                  const Icon(
+                                                    Icons.arrow_forward_rounded,
+                                                    color: AppColors.litho,
+                                                    size: 18,
+                                                  ),
+                                                ],
+                                              ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }),
                             ],
                           ),
                         ),
 
-                        // Bottom Actions Section
+                        // 3. Bottom Biometric & Security Footer
                         Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            // Submit Button
-                            Obx(() {
-                              final loading = controller.isLoading.value;
-                              return Container(
-                                width: double.infinity,
-                                height: AppDimensions.buttonHeight,
-                                decoration: BoxDecoration(
-                                  gradient: AppColors.goldGradient,
-                                  borderRadius: AppDimensions.radius16,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.ore.withValues(alpha: 0.3),
-                                      blurRadius: 16,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    onTap: loading ? null : controller.submitEmail,
-                                    borderRadius: AppDimensions.radius16,
-                                    child: Center(
-                                      child: loading
-                                          ? const SizedBox(
-                                              width: 22,
-                                              height: 22,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2.5,
-                                                valueColor: AlwaysStoppedAnimation<Color>(
-                                                  AppColors.litho,
-                                                ),
-                                              ),
-                                            )
-                                          : Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  AppStrings.emailSubmitBtn,
-                                                  style: AppTypography.buttonText,
-                                                ),
-                                                const SizedBox(width: AppDimensions.p8),
-                                                const Icon(
-                                                  Icons.arrow_forward_rounded,
-                                                  color: AppColors.litho,
-                                                  size: 18,
-                                                ),
-                                              ],
-                                            ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }),
-                            const SizedBox(height: AppDimensions.p16),
-
                             // Biometric Fingerprint Icon
                             Container(
                               width: 48,

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import '../../../core/widgets/offline_mode_sheet.dart';
 import '../../../core/widgets/otzar_dialog.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../data/services/storage_service.dart';
@@ -86,14 +87,19 @@ class PinAccessController extends GetxController {
         isError.value = false;
       });
 
-      // Show Dialog Box notifying user of incorrect PIN
-      OtzarDialog.show(
-        title: 'Invalid Security PIN',
-        message: result.message ??
-            'The 4-digit PIN entered is invalid or expired. Please check your email and try again, or request a reset.',
-        confirmText: 'Try Again',
-        type: OtzarDialogType.error,
-      );
+      if (result.message == 'NO_INTERNET_CONNECTION' ||
+          (result.message != null && result.message!.toLowerCase().contains('connection error'))) {
+        OfflineModeSheet.show(onRetry: _validatePin);
+      } else {
+        // Show Dialog Box notifying user of incorrect PIN
+        OtzarDialog.show(
+          title: 'Invalid Security PIN',
+          message: result.message ??
+              'The 4-digit PIN entered is invalid or expired. Please check your email and try again, or request a reset.',
+          confirmText: 'Try Again',
+          type: OtzarDialogType.error,
+        );
+      }
     }
   }
 

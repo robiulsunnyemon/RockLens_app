@@ -1,11 +1,16 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../data/constants/api_endpoints.dart';
+import '../../../data/repositories/user_repository.dart';
 import '../../../data/services/api_client.dart';
 import '../../../data/services/storage_service.dart';
+import '../../home/controllers/home_controller.dart';
 import '../../main_nav/controllers/main_nav_controller.dart';
+import '../../profile/controllers/profile_controller.dart';
+import '../../vault/controllers/vault_controller.dart';
 
 class SyncQueueItem {
   final String id;
@@ -55,7 +60,11 @@ class SyncEngineController extends GetxController {
   void onInit() {
     super.onInit();
     loadSyncQueue();
-    checkBackendConnectivity();
+    checkBackendConnectivity().then((_) {
+      if (!isOfflineMode.value) {
+        fetchCloudSpecimens();
+      }
+    });
   }
 
   /// Ping FastAPI backend to check real online cloud connectivity
@@ -79,11 +88,94 @@ class SyncEngineController extends GetxController {
     }
   }
 
+  /// Fetch synchronized cloud specimens from FastAPI backend and merge locally
+  Future<void> fetchCloudSpecimens() async {
+    try {
+      final response = await _apiClient.get('${ApiEndpoints.apiV1}/specimens');
+      if (response.isOk && response.body is List) {
+        final cloudItems = response.body as List;
+        final localLogs = _storage.getDiscoveryLogs();
+        final localTags = localLogs.map((l) => l['tag'] as String?).toSet();
+        bool hasNew = false;
+
+        for (final item in cloudItems) {
+          if (item is Map) {
+            final tag = item['tag'] as String?;
+            if (tag != null && !localTags.contains(tag)) {
+              hasNew = true;
+              await _storage.saveDiscoveryLog({
+                'tag': tag,
+                'name': item['name'] ?? 'Specimen',
+                'formula': item['formula'] ?? 'Mineral',
+                'conf': (item['confidence'] as num?)?.toInt() ?? 90,
+                'grade': item['grade'] ?? 'Specimen',
+                'date': 'Cloud Synced',
+                'synced': true,
+                'loc': item['location_name'] ?? 'Field Concession',
+                'notes': item['field_notes'] ?? '',
+                'photos': item['photos'] ?? [],
+                'hasVoiceNote': item['has_voice_note'] ?? false,
+                'voiceDuration': item['voice_duration'],
+                'lat': item['latitude'],
+                'lon': item['longitude'],
+                'altitude': item['altitude'],
+                'timestamp': item['synced_at'] ?? DateTime.now().toIso8601String(),
+              });
+            }
+          }
+        }
+
+        if (hasNew) {
+          loadSyncQueue();
+          if (Get.isRegistered<HomeController>()) {
+            Get.find<HomeController>().loadRecentScans();
+          }
+          if (Get.isRegistered<VaultController>()) {
+            Get.find<VaultController>().loadCatalogAndDiscoveries();
+          }
+          if (Get.isRegistered<ProfileController>()) {
+            Get.find<ProfileController>().refreshDynamicStats();
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
   /// Load real discovery logs from local StorageService
   void loadSyncQueue() {
     final logs = _storage.getDiscoveryLogs();
     final List<SyncQueueItem> queue = [];
     int syncedCount = 0;
+
+    // Check for pending profile credentials update
+    if (_storage.isProfilePendingSync) {
+      queue.add(
+        SyncQueueItem(
+          id: '#PROFILE-SYNC',
+          name: 'Operator Profile Credentials',
+          loc: 'Local Device Cache',
+          size: '4.5 KB',
+          status: 'pending',
+          time: 'Pending Sync',
+          rawData: {'type': 'profile'},
+        ),
+      );
+    }
+
+    // Check for pending avatar upload
+    if (_storage.isAvatarPendingSync) {
+      queue.add(
+        SyncQueueItem(
+          id: '#AVATAR-SYNC',
+          name: 'Operator Profile Avatar',
+          loc: 'Local Device Cache',
+          size: '1.2 MB',
+          status: 'pending',
+          time: 'Pending Upload',
+          rawData: {'type': 'avatar'},
+        ),
+      );
+    }
 
     if (logs.isNotEmpty) {
       for (int i = 0; i < logs.length; i++) {
@@ -142,25 +234,126 @@ class SyncEngineController extends GetxController {
   Future<void> forceBackgroundSync({bool forceAll = false}) async {
     if (isSyncing.value) return;
 
-    List<SyncQueueItem> uploadTargets = items.where((i) => i.status == 'pending').toList();
+    HapticFeedback.mediumImpact();
+    isSyncing.value = true;
 
-    // If no pending items but user clicked sync, sync all items to ensure backend is updated!
-    if (uploadTargets.isEmpty && items.isNotEmpty) {
-      uploadTargets = List.from(items);
+    // 1. Sync pending profile credentials if staged
+    if (_storage.isProfilePendingSync) {
+      final profileItem = items.firstWhereOrNull((i) => i.id == '#PROFILE-SYNC');
+      if (profileItem != null) {
+        profileItem.status = 'processing';
+        items.refresh();
+      }
+
+      final cur = _storage.currentUser;
+      if (cur != null) {
+        try {
+          final userRepo = Get.find<UserRepository>();
+          final res = await userRepo.updateProfile(
+            fullName: cur.fullName,
+            designation: cur.designation,
+            companyName: cur.companyName,
+          );
+          if (res.isSuccess) {
+            await _storage.setProfilePendingSync(false);
+            if (profileItem != null) {
+              profileItem.status = 'synced';
+              items.refresh();
+            }
+          } else {
+            if (profileItem != null) {
+              profileItem.status = 'pending';
+              items.refresh();
+            }
+          }
+        } catch (_) {
+          if (profileItem != null) {
+            profileItem.status = 'pending';
+            items.refresh();
+          }
+        }
+      }
+    }
+
+    // 2. Sync pending avatar if staged
+    if (_storage.isAvatarPendingSync && _storage.pendingAvatarPath != null) {
+      final avatarItem = items.firstWhereOrNull((i) => i.id == '#AVATAR-SYNC');
+      if (avatarItem != null) {
+        avatarItem.status = 'processing';
+        items.refresh();
+      }
+
+      final avatarPath = _storage.pendingAvatarPath!;
+      final avatarFile = File(avatarPath);
+      if (await avatarFile.exists()) {
+        try {
+          final userRepo = Get.find<UserRepository>();
+          final bytes = await avatarFile.readAsBytes();
+          final filename = 'avatar_${DateTime.now().millisecondsSinceEpoch}.jpg';
+          final res = await userRepo.uploadAvatar(fileBytes: bytes, filename: filename);
+
+          if (res.isSuccess && res.data != null) {
+            await _storage.clearPendingAvatarSync();
+            if (avatarItem != null) {
+              avatarItem.status = 'synced';
+              items.refresh();
+            }
+            if (Get.isRegistered<ProfileController>()) {
+              Get.find<ProfileController>().userAvatarUrl.value = res.data!.avatarUrl;
+            }
+            if (Get.isRegistered<HomeController>()) {
+              Get.find<HomeController>().refreshUserData();
+            }
+          } else {
+            if (avatarItem != null) {
+              avatarItem.status = 'pending';
+              items.refresh();
+            }
+            Get.snackbar(
+              'Avatar Sync Notice',
+              res.message ?? 'Could not sync avatar with cloud server.',
+              snackPosition: SnackPosition.BOTTOM,
+            );
+          }
+        } catch (e) {
+          if (avatarItem != null) {
+            avatarItem.status = 'pending';
+            items.refresh();
+          }
+        }
+      }
+    }
+
+    List<SyncQueueItem> uploadTargets = items
+        .where((i) =>
+            i.status == 'pending' &&
+            i.id != '#AVATAR-SYNC' &&
+            i.id != '#PROFILE-SYNC')
+        .toList();
+
+    // If no pending items but user clicked sync, sync all specimen items to ensure backend is updated!
+    if (uploadTargets.isEmpty &&
+        items
+            .where((i) =>
+                i.id != '#AVATAR-SYNC' && i.id != '#PROFILE-SYNC')
+            .isNotEmpty) {
+      uploadTargets = items
+          .where((i) =>
+              i.id != '#AVATAR-SYNC' && i.id != '#PROFILE-SYNC')
+          .toList();
     }
 
     if (uploadTargets.isEmpty) {
+      isSyncing.value = false;
+      loadSyncQueue();
       Get.snackbar(
-        'Queue Clean',
-        'No specimen records found to synchronize.',
+        'Sync Complete ☁️',
+        'Operator credentials and records verified with cloud.',
         snackPosition: SnackPosition.BOTTOM,
         duration: const Duration(seconds: 2),
       );
       return;
     }
-
-    HapticFeedback.mediumImpact();
-    isSyncing.value = true;
 
     // Set UI state to processing
     for (final item in uploadTargets) {

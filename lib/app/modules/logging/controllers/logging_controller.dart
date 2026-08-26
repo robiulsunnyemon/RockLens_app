@@ -10,6 +10,9 @@ import '../../../core/widgets/otzar_dialog.dart';
 import '../../../data/services/storage_service.dart';
 import '../../../data/services/tflite_classifier_service.dart';
 import '../../../routes/app_pages.dart';
+import '../../home/controllers/home_controller.dart';
+import '../../sync_engine/controllers/sync_engine_controller.dart';
+import '../../vault/controllers/vault_controller.dart';
 
 class LoggingController extends GetxController {
   final TfliteClassifierService _classifier = Get.find<TfliteClassifierService>();
@@ -203,7 +206,7 @@ class LoggingController extends GetxController {
       'conf': confidenceScore.value.round(),
       'grade': selectedTags.contains('High-Grade') ? 'Specimen' : 'Ore',
       'date': dateStr.value,
-      'synced': true,
+      'synced': false,
       'loc': selectedTags.isNotEmpty ? selectedTags.first : 'Vein #4',
       'notes': notesTextController.text,
       'photos': List<String>.from(specimenPhotos),
@@ -216,6 +219,16 @@ class LoggingController extends GetxController {
     };
 
     await _storage.saveDiscoveryLog(discoveryItem);
+
+    if (Get.isRegistered<SyncEngineController>()) {
+      Get.find<SyncEngineController>().loadSyncQueue();
+    }
+    if (Get.isRegistered<HomeController>()) {
+      Get.find<HomeController>().loadRecentScans();
+    }
+    if (Get.isRegistered<VaultController>()) {
+      Get.find<VaultController>().loadCatalogAndDiscoveries();
+    }
 
     await OtzarDialog.show(
       title: 'Discovery Logged & Pinned',

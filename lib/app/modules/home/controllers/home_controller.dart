@@ -9,67 +9,105 @@ class HomeController extends GetxController {
 
   UserModel? get currentUser => _storage.currentUser;
 
-  String get operatorName => currentUser?.fullName ?? 'Dr. Robiul';
+  // Reactive user profile observables
+  final userFullName = ''.obs;
+  final userDesignation = ''.obs;
+  final userCompanyName = ''.obs;
+  final userAvatarPath = RxnString();
+  final userAvatarUrl = RxnString();
+
+  String get operatorName => userFullName.value.isNotEmpty
+      ? userFullName.value
+      : (currentUser?.fullName ?? 'Operator');
+
   String get initials {
-    final parts = operatorName.split(' ');
-    if (parts.length >= 2) {
+    final name = operatorName.trim();
+    final parts = name.split(' ');
+    if (parts.length >= 2 && parts[0].isNotEmpty && parts[1].isNotEmpty) {
       return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
     }
-    return operatorName.isNotEmpty ? operatorName.substring(0, 2).toUpperCase() : 'DR';
+    return name.isNotEmpty ? name.substring(0, name.length >= 2 ? 2 : 1).toUpperCase() : 'OP';
   }
-  String get designation => currentUser?.designation ?? 'Lead Exploration Geologist';
-  String get companyName => currentUser?.companyName ?? 'Pan-African Mineral Consortium';
 
-  // Reactive observable list for recent scans
+  String get designation => userDesignation.value.isNotEmpty
+      ? userDesignation.value
+      : (currentUser?.designation ?? 'Lead Exploration Geologist');
+
+  String get companyName => userCompanyName.value.isNotEmpty
+      ? userCompanyName.value
+      : (currentUser?.companyName ?? 'Pan-African Mineral Consortium');
+
+  // Dynamic Telemetry Metrics
+  final todayFindsCount = 0.obs;
+  final estimatedValue = 0.0.obs;
+  final pendingSyncCount = 0.obs;
+
+  // Reactive observable list for recent scans (100% real logs only)
   final recentScans = <Map<String, dynamic>>[].obs;
+
+  String get estValueFormatted {
+    if (estimatedValue.value <= 0) return r'$0';
+    if (estimatedValue.value >= 1000) {
+      return '\$${(estimatedValue.value / 1000).toStringAsFixed(1)}K';
+    }
+    return '\$${estimatedValue.value.toInt()}';
+  }
 
   @override
   void onInit() {
     super.onInit();
+    refreshUserData();
     loadRecentScans();
+  }
+
+  void refreshUserData() {
+    final u = _storage.currentUser;
+    if (u != null) {
+      userFullName.value = u.fullName;
+      userDesignation.value = u.designation;
+      userCompanyName.value = u.companyName;
+      userAvatarUrl.value = u.avatarUrl;
+    }
+    userAvatarPath.value = _storage.localAvatarPath;
   }
 
   void loadRecentScans() {
     final logs = _storage.getDiscoveryLogs();
-    if (logs.isNotEmpty) {
-      final items = logs.map((log) => {
-        'name': log['name'] ?? 'Specimen',
-        'formula': log['formula'] ?? 'Mineral',
-        'conf': log['conf'] ?? 92,
-        'grade': log['grade'] ?? 'Specimen',
-        'time': log['date'] ?? 'Recent',
-        'color': _getMineralColorHex(log['name'] as String? ?? ''),
-      }).toList();
-      recentScans.assignAll(items);
-      return;
-    }
 
-    recentScans.assignAll(const [
-      {
-        'name': 'Malachite',
-        'formula': 'Cu₂CO₃(OH)₂',
-        'conf': 86,
-        'grade': 'Specimen',
-        'time': '14:32',
-        'color': 0xFF00C853,
-      },
-      {
-        'name': 'Tanzanite',
-        'formula': 'Ca₂Al₃(SiO₄)₃(OH)+V',
-        'conf': 94,
-        'grade': 'Gemstone',
-        'time': '12:08',
-        'color': 0xFF6366F1,
-      },
-      {
-        'name': 'Pyrite',
-        'formula': 'FeS₂',
-        'conf': 78,
-        'grade': 'Industrial',
-        'time': '09:45',
-        'color': 0xFFFF9100,
-      },
-    ]);
+    if (logs.isNotEmpty) {
+      int unSynced = 0;
+      double totalVal = 0;
+
+      final items = logs.map((log) {
+        if (log['synced'] != true) {
+          unSynced++;
+        }
+        totalVal += 600.0;
+
+        return {
+          'name': log['name'] ?? 'Specimen',
+          'formula': log['formula'] ?? 'Mineral',
+          'conf': log['conf'] ?? 92,
+          'grade': log['grade'] ?? 'Specimen',
+          'time': log['date'] ?? 'Recent',
+          'color': _getMineralColorHex(log['name'] as String? ?? ''),
+        };
+      }).toList();
+
+      todayFindsCount.value = logs.length;
+      estimatedValue.value = totalVal;
+      if (_storage.isAvatarPendingSync) unSynced++;
+      if (_storage.isProfilePendingSync) unSynced++;
+      pendingSyncCount.value = unSynced;
+      recentScans.assignAll(items);
+    } else {
+      // 0 Scans logged: Strictly zero metrics & empty list
+      todayFindsCount.value = 0;
+      estimatedValue.value = 0.0;
+      int extraPending = (_storage.isAvatarPendingSync ? 1 : 0) + (_storage.isProfilePendingSync ? 1 : 0);
+      pendingSyncCount.value = extraPending;
+      recentScans.clear();
+    }
   }
 
   int _getMineralColorHex(String name) {

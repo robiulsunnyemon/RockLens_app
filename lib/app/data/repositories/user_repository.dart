@@ -35,6 +35,7 @@ class UserRepository {
     String? designation,
     String? companyName,
     String? teamName,
+    String? avatarUrl,
   }) async {
     try {
       final body = <String, dynamic>{};
@@ -42,6 +43,7 @@ class UserRepository {
       if (designation != null) body['designation'] = designation;
       if (companyName != null) body['company_name'] = companyName;
       if (teamName != null) body['team_name'] = teamName;
+      if (avatarUrl != null) body['avatar_url'] = avatarUrl;
 
       final response = await _client.patch(ApiEndpoints.userMe, body);
 
@@ -98,10 +100,19 @@ class UserRepository {
   }) async {
     try {
       final form = FormData({
-        'file': MultipartFile(fileBytes, filename: filename),
+        'file': MultipartFile(
+          fileBytes,
+          filename: filename,
+          contentType: 'image/jpeg',
+        ),
       });
 
-      final response = await _client.post(ApiEndpoints.userAvatar, form);
+      var response = await _client.post(ApiEndpoints.userAvatar, form);
+
+      if (!response.isOk) {
+        _client.baseUrl = ApiEndpoints.fallbackLocalUrl;
+        response = await _client.post(ApiEndpoints.userAvatar, form);
+      }
 
       if (response.isOk && response.body != null) {
         final user = UserModel.fromJson(response.body as Map<String, dynamic>);

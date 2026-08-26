@@ -394,21 +394,31 @@ class VaultView extends GetView<VaultController> {
                               children: [
                                 Row(
                                   children: [
-                                    Text(
-                                      item.name,
-                                      style: AppTypography.displayMedium.copyWith(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
+                                    Flexible(
+                                      child: Text(
+                                        item.name,
+                                        style: AppTypography.displayMedium.copyWith(
+                                          fontSize: 13.5,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
-                                    const SizedBox(width: AppDimensions.p6),
-                                    Text(
-                                      item.formula,
-                                      style: AppTypography.monoTag.copyWith(
-                                        color: AppColors.subtle,
-                                        fontSize: 8.5,
+                                    if (item.formula.isNotEmpty) ...[
+                                      const SizedBox(width: AppDimensions.p6),
+                                      Flexible(
+                                        child: Text(
+                                          item.formula,
+                                          style: AppTypography.monoTag.copyWith(
+                                            color: AppColors.subtle,
+                                            fontSize: 8.5,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
-                                    ),
+                                    ],
                                   ],
                                 ),
                                 const SizedBox(height: 2),
@@ -422,11 +432,15 @@ class VaultView extends GetView<VaultController> {
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    Text(
-                                      ' · ${item.loc} · ${item.date}',
-                                      style: AppTypography.hudTicker.copyWith(
-                                        color: AppColors.subtle,
-                                        fontSize: 9,
+                                    Expanded(
+                                      child: Text(
+                                        ' · ${item.loc} · ${item.date}',
+                                        style: AppTypography.hudTicker.copyWith(
+                                          color: AppColors.subtle,
+                                          fontSize: 9,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                   ],
@@ -434,6 +448,7 @@ class VaultView extends GetView<VaultController> {
                               ],
                             ),
                           ),
+                          const SizedBox(width: AppDimensions.p8),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
@@ -452,6 +467,8 @@ class VaultView extends GetView<VaultController> {
                                     color: AppColors.subtle,
                                     fontSize: 8,
                                   ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                               const SizedBox(height: 4),

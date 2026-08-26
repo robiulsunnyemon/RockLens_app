@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_colors.dart';
@@ -19,24 +20,14 @@ class ProfileView extends GetView<ProfileController> {
           children: [
             // Fixed Top Section (Profile Header Card)
             Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppDimensions.p16,
-                AppDimensions.p12,
-                AppDimensions.p16,
-                AppDimensions.p12,
-              ),
+              padding: const EdgeInsets.all(AppDimensions.p16),
               child: GestureDetector(
                 onTap: controller.openEditProfileSheet,
-                behavior: HitTestBehavior.opaque,
                 child: Container(
                   padding: const EdgeInsets.all(AppDimensions.p16),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF181C24), Color(0xFF1E2330)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: AppDimensions.radius24,
+                    color: AppColors.surface,
+                    borderRadius: AppDimensions.radius20,
                     border: Border.all(
                       color: AppColors.ore.withValues(alpha: 0.15),
                       width: 1,
@@ -53,31 +44,118 @@ class ProfileView extends GetView<ProfileController> {
                     children: [
                       Row(
                         children: [
-                          // Initials Avatar
-                          Obx(() => Container(
-                                width: 56,
-                                height: 56,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: AppColors.goldGradient,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.ore.withValues(alpha: 0.25),
-                                      blurRadius: 16,
+                          // Interactive Operator Avatar
+                          GestureDetector(
+                            onTap: controller.openAvatarPickerSheet,
+                            child: Stack(
+                              children: [
+                                Obx(() {
+                                  final localPath = controller.userAvatarPath.value;
+                                  final remoteUrl = controller.userAvatarUrl.value;
+                                  final isUploading = controller.isUploadingAvatar.value;
+
+                                  Widget avatarContent;
+
+                                  if (localPath != null && File(localPath).existsSync()) {
+                                    avatarContent = ClipOval(
+                                      child: Image.file(
+                                        File(localPath),
+                                        width: 58,
+                                        height: 58,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    );
+                                  } else if (remoteUrl != null && remoteUrl.isNotEmpty) {
+                                    avatarContent = ClipOval(
+                                      child: Image.network(
+                                        remoteUrl,
+                                        width: 58,
+                                        height: 58,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (ctx, err, stack) => Center(
+                                          child: Text(
+                                            controller.initials,
+                                            style: AppTypography.displayMedium.copyWith(
+                                              color: AppColors.litho,
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    avatarContent = Center(
+                                      child: Text(
+                                        controller.initials,
+                                        style: AppTypography.displayMedium.copyWith(
+                                          color: AppColors.litho,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    );
+                                  }
+
+                                  return Container(
+                                    width: 58,
+                                    height: 58,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      gradient: AppColors.goldGradient,
+                                      border: Border.all(
+                                        color: AppColors.ore,
+                                        width: 1.5,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.ore.withValues(alpha: 0.25),
+                                          blurRadius: 16,
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    controller.initials,
-                                    style: AppTypography.displayMedium.copyWith(
-                                      color: AppColors.litho,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
+                                    child: isUploading
+                                        ? const Center(
+                                            child: SizedBox(
+                                              width: 22,
+                                              height: 22,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2.5,
+                                                valueColor: AlwaysStoppedAnimation<Color>(AppColors.litho),
+                                              ),
+                                            ),
+                                          )
+                                        : avatarContent,
+                                  );
+                                }),
+
+                                // Small Camera Badge on Avatar
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: AppColors.surface,
+                                      border: Border.all(color: AppColors.ore, width: 1.2),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.5),
+                                          blurRadius: 4,
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.camera_alt_rounded,
+                                      size: 11,
+                                      color: AppColors.ore,
                                     ),
                                   ),
                                 ),
-                              )),
+                              ],
+                            ),
+                          ),
                           const SizedBox(width: AppDimensions.p14),
 
                           // Dynamic Info
@@ -192,13 +270,19 @@ class ProfileView extends GetView<ProfileController> {
                                     letterSpacing: 0.8,
                                   ),
                                 ),
-                                Obx(() => Text(
-                                      '${(controller.dynamicStorageUsedMb.value / 1024).toStringAsFixed(1)} GB / ${(controller.dynamicStorageTotalMb.value / 1024).toStringAsFixed(1)} GB',
-                                      style: AppTypography.hudTicker.copyWith(
-                                        color: AppColors.subtle,
-                                        fontSize: 10,
-                                      ),
-                                    )),
+                                Obx(() {
+                                  final mb = controller.dynamicStorageUsedMb.value;
+                                  final usedStr = mb < 1024
+                                      ? '${mb.toStringAsFixed(1)} MB'
+                                      : '${(mb / 1024).toStringAsFixed(2)} GB';
+                                  return Text(
+                                    '$usedStr / ${(controller.dynamicStorageTotalMb.value / 1024).toStringAsFixed(1)} GB',
+                                    style: AppTypography.hudTicker.copyWith(
+                                      color: AppColors.subtle,
+                                      fontSize: 10,
+                                    ),
+                                  );
+                                }),
                               ],
                             ),
                             const SizedBox(height: AppDimensions.p8),
@@ -226,20 +310,63 @@ class ProfileView extends GetView<ProfileController> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Obx(() => Text(
-                                      '${(controller.storagePercentage * 100).toInt()}% used · Tap to clean',
-                                      style: AppTypography.hudTicker.copyWith(
-                                        color: AppColors.muted,
-                                        fontSize: 8.5,
+                                Obx(() {
+                                  final pct = controller.storagePercentage * 100;
+                                  final pctStr = pct < 1 ? '< 1%' : '${pct.toStringAsFixed(1)}%';
+                                  return Text(
+                                    '$pctStr used · Tap to clean',
+                                    style: AppTypography.hudTicker.copyWith(
+                                      color: AppColors.muted,
+                                      fontSize: 8.5,
+                                    ),
+                                  );
+                                }),
+                                GestureDetector(
+                                  onTap: controller.goToSyncEngine,
+                                  child: Obx(() {
+                                    final count = controller.bufferedScansCount.value;
+                                    final isSynced = count == 0;
+                                    final color = isSynced ? AppColors.cyan : const Color(0xFFFF9100);
+
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 3,
                                       ),
-                                    )),
-                                Obx(() => Text(
-                                      '${controller.bufferedScansCount.value} SCANS BUFFERED',
-                                      style: AppTypography.hudTicker.copyWith(
-                                        color: AppColors.emerald,
-                                        fontSize: 8.5,
+                                      decoration: BoxDecoration(
+                                        color: color.withValues(alpha: 0.12),
+                                        borderRadius: BorderRadius.circular(AppDimensions.r6),
+                                        border: Border.all(
+                                          color: color.withValues(alpha: 0.35),
+                                          width: 1,
+                                        ),
                                       ),
-                                    )),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            isSynced
+                                                ? Icons.cloud_done_outlined
+                                                : Icons.cloud_upload_outlined,
+                                            size: 10,
+                                            color: color,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            isSynced
+                                                ? 'VAULT SYNCHRONIZED'
+                                                : '$count SCANS BUFFERED',
+                                            style: AppTypography.hudTicker.copyWith(
+                                              color: color,
+                                              fontSize: 8.5,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }),
+                                ),
                               ],
                             ),
                           ],

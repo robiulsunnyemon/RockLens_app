@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/values/app_dimensions.dart';
@@ -10,6 +11,9 @@ import '../../../data/repositories/auth_repository.dart';
 import '../../../data/repositories/user_repository.dart';
 import '../../../data/services/storage_service.dart';
 import '../../../routes/app_pages.dart';
+import '../../home/controllers/home_controller.dart';
+import '../../main_nav/controllers/main_nav_controller.dart';
+import '../../sync_engine/controllers/sync_engine_controller.dart';
 
 class OfflineMapRegion {
   final String id;
@@ -49,7 +53,7 @@ class ProfileController extends GetxController {
   // Dynamic Telemetry Metrics
   final dynamicScansCount = 0.obs;
   final dynamicMineralsCount = 0.obs;
-  final dynamicStorageUsedMb = 3200.0.obs;
+  final dynamicStorageUsedMb = 18.5.obs;
   final dynamicStorageTotalMb = 5120.0.obs;
   final bufferedScansCount = 0.obs;
 
@@ -94,6 +98,12 @@ class ProfileController extends GetxController {
       downloaded: false,
     ),
   ].obs;
+
+  // Avatar State
+  final userAvatarPath = RxnString();
+  final userAvatarUrl = RxnString();
+  final isUploadingAvatar = false.obs;
+  final ImagePicker _imagePicker = ImagePicker();
 
   UserModel? get currentUser => _storage.currentUser;
 
@@ -141,11 +151,13 @@ class ProfileController extends GetxController {
       isSunlightMode.value = user.sunlightMode;
       isVoiceLogging.value = user.voiceLogging;
       isAutoSync.value = user.autoSync;
+      userAvatarUrl.value = user.avatarUrl;
     } else {
       userFullName.value = 'Dr. Robiulsunyemon';
       userDesignation.value = 'Lead Exploration Geologist';
       userCompanyName.value = 'Geo Exploration Unit';
     }
+    userAvatarPath.value = _storage.localAvatarPath;
   }
 
   /// Dynamically computes real discovery scans, unique minerals, and storage usage
@@ -154,7 +166,7 @@ class ProfileController extends GetxController {
     final totalScans = logs.length;
     final Set<String> uniqueMinerals = {};
     int unSyncedCount = 0;
-    double calculatedMb = 120.0; // Base application cache
+    double calculatedMb = 18.5; // Base application & neural weights cache
 
     for (final log in logs) {
       final name = log['name'] as String?;
@@ -169,12 +181,10 @@ class ProfileController extends GetxController {
       calculatedMb += (1.4 * photoCount);
     }
 
-    dynamicScansCount.value = totalScans > 0 ? totalScans : (currentUser?.scansCount ?? 247);
-    dynamicMineralsCount.value = uniqueMinerals.isNotEmpty
-        ? uniqueMinerals.length
-        : (currentUser?.mineralsCount ?? 31);
-    bufferedScansCount.value = unSyncedCount > 0 ? unSyncedCount : 128;
-    dynamicStorageUsedMb.value = (3100.0 + calculatedMb);
+    dynamicScansCount.value = totalScans;
+    dynamicMineralsCount.value = uniqueMinerals.length;
+    bufferedScansCount.value = unSyncedCount;
+    dynamicStorageUsedMb.value = calculatedMb;
   }
 
   /// Sync with FastAPI backend
@@ -188,7 +198,282 @@ class ProfileController extends GetxController {
       isSunlightMode.value = u.sunlightMode;
       isVoiceLogging.value = u.voiceLogging;
       isAutoSync.value = u.autoSync;
+      userAvatarUrl.value = u.avatarUrl;
+      if (u.scansCount > dynamicScansCount.value) {
+        dynamicScansCount.value = u.scansCount;
+      }
+      if (u.mineralsCount > dynamicMineralsCount.value) {
+        dynamicMineralsCount.value = u.mineralsCount;
+      }
+      if (Get.isRegistered<HomeController>()) {
+        Get.find<HomeController>().refreshUserData();
+      }
     }
+  }
+
+  /// Switch directly to Sync Engine Tab
+  void goToSyncEngine() {
+    HapticFeedback.selectionClick();
+    if (Get.isRegistered<MainNavController>()) {
+      Get.find<MainNavController>().changePage(3);
+    } else {
+      Get.offAllNamed(Routes.HOME, arguments: {'tab': 3});
+    }
+  }
+
+  /// Open Avatar Source Selection Modal (Camera, Gallery, Remove)
+  void openAvatarPickerSheet() {
+    HapticFeedback.lightImpact();
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(AppDimensions.p20),
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(AppDimensions.r24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceBorder,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppDimensions.p16),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.goldSubtle,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.ore.withValues(alpha: 0.3)),
+                  ),
+                  child: const Icon(Icons.camera_alt_outlined, color: AppColors.ore, size: 22),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Operator Profile Photo',
+                        style: AppTypography.displayMedium.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'Offline resilient & automatic cloud synchronization',
+                        style: AppTypography.hudTicker.copyWith(
+                          color: AppColors.subtle,
+                          fontSize: 9.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppDimensions.p20),
+
+            // Camera Option
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.litho,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.surfaceBorder),
+                ),
+                child: const Icon(Icons.camera_enhance_rounded, color: AppColors.cyan, size: 20),
+              ),
+              title: Text(
+                'Take Field Photo (Camera)',
+                style: AppTypography.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.quartz,
+                ),
+              ),
+              subtitle: Text(
+                'Capture live operator photo via device camera',
+                style: AppTypography.bodySmall.copyWith(color: AppColors.subtle, fontSize: 11),
+              ),
+              onTap: () {
+                Get.back();
+                pickAndUploadAvatar(ImageSource.camera);
+              },
+            ),
+            const Divider(color: AppColors.surfaceBorder, height: 12),
+
+            // Gallery Option
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.litho,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.surfaceBorder),
+                ),
+                child: const Icon(Icons.photo_library_outlined, color: AppColors.ore, size: 20),
+              ),
+              title: Text(
+                'Choose from Gallery',
+                style: AppTypography.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.quartz,
+                ),
+              ),
+              subtitle: Text(
+                'Select an image from device albums',
+                style: AppTypography.bodySmall.copyWith(color: AppColors.subtle, fontSize: 11),
+              ),
+              onTap: () {
+                Get.back();
+                pickAndUploadAvatar(ImageSource.gallery);
+              },
+            ),
+
+            if (userAvatarPath.value != null || (userAvatarUrl.value != null && userAvatarUrl.value!.isNotEmpty)) ...[
+              const Divider(color: AppColors.surfaceBorder, height: 12),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.ember.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.ember.withValues(alpha: 0.3)),
+                  ),
+                  child: const Icon(Icons.delete_outline_rounded, color: AppColors.ember, size: 20),
+                ),
+                title: Text(
+                  'Remove Profile Photo',
+                  style: AppTypography.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.ember,
+                  ),
+                ),
+                subtitle: Text(
+                  'Revert to operator initials badge',
+                  style: AppTypography.bodySmall.copyWith(color: AppColors.subtle, fontSize: 11),
+                ),
+                onTap: () {
+                  Get.back();
+                  removeAvatar();
+                },
+              ),
+            ],
+            const SizedBox(height: AppDimensions.p12),
+          ],
+        ),
+      ),
+      isScrollControlled: true,
+    );
+  }
+
+  /// Pick avatar from camera/gallery, save offline instantly, and sync online
+  Future<void> pickAndUploadAvatar(ImageSource source) async {
+    try {
+      final picked = await _imagePicker.pickImage(
+        source: source,
+        maxWidth: 1000,
+        maxHeight: 1000,
+        imageQuality: 85,
+      );
+
+      if (picked == null) return;
+
+      final path = picked.path;
+
+      // 1. Instant 0ms Offline Cache
+      await _storage.saveLocalAvatarPath(path);
+      userAvatarPath.value = path;
+
+      // Update current user model locally
+      final cur = currentUser;
+      if (cur != null) {
+        final updated = cur.copyWith(avatarUrl: path);
+        await _storage.saveUser(updated);
+      }
+
+      // Notify HomeController
+      if (Get.isRegistered<HomeController>()) {
+        Get.find<HomeController>().refreshUserData();
+      }
+
+      // 2. Cloud Sync Attempt
+      isUploadingAvatar.value = true;
+      final fileBytes = await picked.readAsBytes();
+      final filename = 'avatar_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      final res = await _userRepository.uploadAvatar(
+        fileBytes: fileBytes,
+        filename: filename,
+      );
+
+      isUploadingAvatar.value = false;
+
+      if (res.isSuccess && res.data != null) {
+        userAvatarUrl.value = res.data!.avatarUrl;
+        await _storage.clearPendingAvatarSync();
+        if (Get.isRegistered<HomeController>()) {
+          Get.find<HomeController>().refreshUserData();
+        }
+        Get.snackbar(
+          'Avatar Synchronized ☁️',
+          'Profile photo uploaded and synced with Cloudinary.',
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 3),
+        );
+      } else {
+        // Offline / Unreachable -> Stage for background sync
+        await _storage.setAvatarPendingSync(true, path: path);
+        Get.snackbar(
+          'Saved Offline 💾',
+          'Avatar updated locally. Staged for cloud sync when connection returns.',
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 3),
+        );
+      }
+    } catch (e) {
+      isUploadingAvatar.value = false;
+      Get.snackbar(
+        'Avatar Error',
+        'Could not update photo: $e',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+
+  /// Remove avatar and revert to initials
+  Future<void> removeAvatar() async {
+    await _storage.saveLocalAvatarPath(null);
+    await _storage.clearPendingAvatarSync();
+    userAvatarPath.value = null;
+    userAvatarUrl.value = null;
+
+    final cur = currentUser;
+    if (cur != null) {
+      final updated = cur.copyWith(avatarUrl: '');
+      await _storage.saveUser(updated);
+    }
+
+    if (Get.isRegistered<HomeController>()) {
+      Get.find<HomeController>().refreshUserData();
+    }
+
+    Get.snackbar(
+      'Avatar Removed',
+      'Reverted to operator initials badge.',
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 2),
+    );
   }
 
   /// Open Interactive Edit Profile Modal
@@ -242,24 +527,26 @@ class ProfileController extends GetxController {
                     ),
                   ),
                   const SizedBox(width: AppDimensions.p14),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Edit Operator Profile',
-                        style: AppTypography.displayMedium.copyWith(
-                          fontSize: 16.5,
-                          fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Edit Operator Profile',
+                          style: AppTypography.displayMedium.copyWith(
+                            fontSize: 16.5,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      Text(
-                        'Changes will sync with FastAPI Cloud Database',
-                        style: AppTypography.hudTicker.copyWith(
-                          color: AppColors.subtle,
-                          fontSize: 9.5,
+                        Text(
+                          'Changes will sync with FastAPI Cloud Database',
+                          style: AppTypography.hudTicker.copyWith(
+                            color: AppColors.subtle,
+                            fontSize: 9.5,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -314,6 +601,22 @@ class ProfileController extends GetxController {
                               if (newDes.isNotEmpty) userDesignation.value = newDes;
                               if (newComp.isNotEmpty) userCompanyName.value = newComp;
 
+                              // Persist updated user model in StorageService
+                              final current = _storage.currentUser;
+                              if (current != null) {
+                                final updated = current.copyWith(
+                                  fullName: newName,
+                                  designation: newDes.isNotEmpty ? newDes : current.designation,
+                                  companyName: newComp.isNotEmpty ? newComp : current.companyName,
+                                );
+                                await _storage.saveUser(updated);
+                              }
+
+                              // Notify HomeController immediately
+                              if (Get.isRegistered<HomeController>()) {
+                                Get.find<HomeController>().refreshUserData();
+                              }
+
                               // Sync with backend API
                               final res = await _userRepository.updateProfile(
                                 fullName: newName,
@@ -325,6 +628,10 @@ class ProfileController extends GetxController {
                               Get.back();
 
                               if (res.isSuccess) {
+                                await _storage.setProfilePendingSync(false);
+                                if (Get.isRegistered<SyncEngineController>()) {
+                                  Get.find<SyncEngineController>().loadSyncQueue();
+                                }
                                 Get.snackbar(
                                   'Profile Updated 🚀',
                                   'Operator credentials updated locally and on cloud database.',
@@ -332,9 +639,13 @@ class ProfileController extends GetxController {
                                   duration: const Duration(seconds: 3),
                                 );
                               } else {
+                                await _storage.setProfilePendingSync(true);
+                                if (Get.isRegistered<SyncEngineController>()) {
+                                  Get.find<SyncEngineController>().loadSyncQueue();
+                                }
                                 Get.snackbar(
                                   'Cached Locally 💾',
-                                  'Updated on device. Will auto-sync when online.',
+                                  'Updated on device. Staged for cloud sync when connection returns.',
                                   snackPosition: SnackPosition.BOTTOM,
                                   duration: const Duration(seconds: 3),
                                 );
@@ -458,24 +769,26 @@ class ProfileController extends GetxController {
                   child: const Icon(Icons.electric_bolt_rounded, color: AppColors.ore, size: 22),
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Sensor Calibration HUD',
-                      style: AppTypography.displayMedium.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Sensor Calibration HUD',
+                        style: AppTypography.displayMedium.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'High-precision Geological Strike & Dip',
-                      style: AppTypography.hudTicker.copyWith(
-                        color: AppColors.subtle,
-                        fontSize: 9.5,
+                      Text(
+                        'High-precision Geological Strike & Dip',
+                        style: AppTypography.hudTicker.copyWith(
+                          color: AppColors.subtle,
+                          fontSize: 9.5,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -589,24 +902,26 @@ class ProfileController extends GetxController {
                   child: const Icon(Icons.map_outlined, color: AppColors.cyan, size: 22),
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Offline GIS Map Packs',
-                      style: AppTypography.displayMedium.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Offline GIS Map Packs',
+                        style: AppTypography.displayMedium.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'Vector & Satellite tiles for remote exploration',
-                      style: AppTypography.hudTicker.copyWith(
-                        color: AppColors.subtle,
-                        fontSize: 9.5,
+                      Text(
+                        'Vector & Satellite tiles for remote exploration',
+                        style: AppTypography.hudTicker.copyWith(
+                          color: AppColors.subtle,
+                          fontSize: 9.5,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -757,24 +1072,26 @@ class ProfileController extends GetxController {
                   child: const Icon(Icons.psychology_outlined, color: Colors.purpleAccent, size: 22),
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Neural Model Manager',
-                      style: AppTypography.displayMedium.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Neural Model Manager',
+                        style: AppTypography.displayMedium.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'Edge-AI Geological Mineral Classifier',
-                      style: AppTypography.hudTicker.copyWith(
-                        color: AppColors.subtle,
-                        fontSize: 9.5,
+                      Text(
+                        'Edge-AI Geological Mineral Classifier',
+                        style: AppTypography.hudTicker.copyWith(
+                          color: AppColors.subtle,
+                          fontSize: 9.5,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -879,22 +1196,24 @@ class ProfileController extends GetxController {
                   child: const Icon(Icons.shield_outlined, color: AppColors.ember, size: 22),
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Field Safety & SOS Hotlines',
-                      style: AppTypography.displayMedium.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.ember,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Field Safety & SOS Hotlines',
+                        style: AppTypography.displayMedium.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.ember,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'Emergency dispatch & safety protocols',
-                      style: AppTypography.hudTicker.copyWith(color: AppColors.subtle, fontSize: 9.5),
-                    ),
-                  ],
+                      Text(
+                        'Emergency dispatch & safety protocols',
+                        style: AppTypography.hudTicker.copyWith(color: AppColors.subtle, fontSize: 9.5),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -952,10 +1271,10 @@ class ProfileController extends GetxController {
   /// Clean Cache / Local Media
   void clearMediaCache() {
     HapticFeedback.mediumImpact();
-    dynamicStorageUsedMb.value = 3100.0;
+    refreshDynamicStats();
     Get.snackbar(
       'Cache Optimized 🧹',
-      'Temporary map rasters and scan buffers cleaned. Storage freed.',
+      'Temporary cache and scan buffers cleaned. Storage freed.',
       snackPosition: SnackPosition.BOTTOM,
       duration: const Duration(seconds: 3),
     );
@@ -1014,21 +1333,23 @@ class ProfileController extends GetxController {
                   child: const Icon(Icons.info_outline_rounded, color: AppColors.ore, size: 24),
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'About Otzar Field AI',
-                      style: AppTypography.displayMedium.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'About Otzar Field AI',
+                        style: AppTypography.displayMedium.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'Version 2.4.1 (Build 2026.08)',
-                      style: AppTypography.hudTicker.copyWith(color: AppColors.subtle, fontSize: 10),
-                    ),
-                  ],
+                      Text(
+                        'Version 2.4.1 (Build 2026.08)',
+                        style: AppTypography.hudTicker.copyWith(color: AppColors.subtle, fontSize: 10),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -1111,21 +1432,23 @@ class ProfileController extends GetxController {
                   child: const Icon(Icons.security_outlined, color: AppColors.cyan, size: 24),
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Setting & Privacy',
-                      style: AppTypography.displayMedium.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Setting & Privacy',
+                        style: AppTypography.displayMedium.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'Data Governance & Protection',
-                      style: AppTypography.hudTicker.copyWith(color: AppColors.subtle, fontSize: 10),
-                    ),
-                  ],
+                      Text(
+                        'Data Governance & Protection',
+                        style: AppTypography.hudTicker.copyWith(color: AppColors.subtle, fontSize: 10),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -1209,22 +1532,24 @@ class ProfileController extends GetxController {
                   child: const Icon(Icons.person_remove_outlined, color: AppColors.ember, size: 24),
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Account Delete Request',
-                      style: AppTypography.displayMedium.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.ember,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Account Delete Request',
+                        style: AppTypography.displayMedium.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.ember,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'Permanent data erasure request',
-                      style: AppTypography.hudTicker.copyWith(color: AppColors.subtle, fontSize: 10),
-                    ),
-                  ],
+                      Text(
+                        'Permanent data erasure request',
+                        style: AppTypography.hudTicker.copyWith(color: AppColors.subtle, fontSize: 10),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

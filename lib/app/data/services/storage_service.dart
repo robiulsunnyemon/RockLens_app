@@ -10,6 +10,9 @@ class StorageService extends GetxService {
   static const String _keyRefreshToken = 'refresh_token';
   static const String _keyUser = 'current_user';
   static const String _keyLastEmail = 'last_email';
+  static const String _keyLocalAvatarPath = 'local_avatar_path';
+  static const String _keyAvatarPendingSync = 'avatar_pending_sync';
+  static const String _keyPendingAvatarPath = 'pending_avatar_path';
 
   Future<StorageService> init() async {
     await GetStorage.init();
@@ -51,6 +54,43 @@ class StorageService extends GetxService {
     await _box.write(_keyUser, jsonEncode(user.toJson()));
   }
 
+  // Offline Avatar Management
+  String? get localAvatarPath => _box.read<String>(_keyLocalAvatarPath);
+
+  Future<void> saveLocalAvatarPath(String? path) async {
+    if (path == null || path.isEmpty) {
+      await _box.remove(_keyLocalAvatarPath);
+    } else {
+      await _box.write(_keyLocalAvatarPath, path);
+    }
+  }
+
+  bool get isAvatarPendingSync => _box.read<bool>(_keyAvatarPendingSync) ?? false;
+  String? get pendingAvatarPath => _box.read<String>(_keyPendingAvatarPath);
+
+  Future<void> setAvatarPendingSync(bool pending, {String? path}) async {
+    await _box.write(_keyAvatarPendingSync, pending);
+    if (path != null && pending) {
+      await _box.write(_keyPendingAvatarPath, path);
+    } else if (!pending) {
+      await _box.remove(_keyPendingAvatarPath);
+    }
+  }
+
+  Future<void> clearPendingAvatarSync() async {
+    await _box.remove(_keyAvatarPendingSync);
+    await _box.remove(_keyPendingAvatarPath);
+  }
+
+  // Offline Profile Credentials Sync Management
+  static const String _keyProfilePendingSync = 'profile_pending_sync';
+
+  bool get isProfilePendingSync => _box.read<bool>(_keyProfilePendingSync) ?? false;
+
+  Future<void> setProfilePendingSync(bool pending) async {
+    await _box.write(_keyProfilePendingSync, pending);
+  }
+
   static const String _keyDiscoveryLogs = 'discovery_logs';
 
   // Discovery Logs
@@ -89,6 +129,9 @@ class StorageService extends GetxService {
     await _box.remove(_keyAccessToken);
     await _box.remove(_keyRefreshToken);
     await _box.remove(_keyUser);
+    await _box.remove(_keyLocalAvatarPath);
+    await _box.remove(_keyAvatarPendingSync);
+    await _box.remove(_keyPendingAvatarPath);
   }
 
   // Clear all storage box data

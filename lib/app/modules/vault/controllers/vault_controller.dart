@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/services/storage_service.dart';
-import '../../../data/services/tflite_classifier_service.dart';
 
 class SpecimenItem {
   final String name;
@@ -30,7 +29,6 @@ class SpecimenItem {
 }
 
 class VaultController extends GetxController {
-  final TfliteClassifierService _classifier = Get.find<TfliteClassifierService>();
   final StorageService _storage = Get.find<StorageService>();
 
   final searchTextController = TextEditingController();
@@ -58,61 +56,36 @@ class VaultController extends GetxController {
   void loadCatalogAndDiscoveries() {
     final List<SpecimenItem> items = [];
 
-    // 1. Load User's logged discoveries
+    // Load User's real logged discoveries exclusively
     final userLogs = _storage.getDiscoveryLogs();
     for (final log in userLogs) {
+      final name = log['name'] as String? ?? 'Logged Specimen';
       items.add(SpecimenItem(
-        name: log['name'] ?? 'Logged Specimen',
-        formula: log['formula'] ?? 'Mineral',
+        name: name,
+        formula: log['formula'] as String? ?? 'Mineral',
         conf: (log['conf'] as num?)?.toInt() ?? 92,
-        grade: log['grade'] ?? 'Specimen',
-        date: log['date'] ?? 'Recent',
-        colorHex: 0xFF00E5FF,
-        synced: log['synced'] ?? true,
-        loc: log['loc'] ?? 'Discovery Zone',
+        grade: log['grade'] as String? ?? 'Specimen',
+        date: log['date'] as String? ?? 'Recent',
+        colorHex: _getMineralColorHex(name),
+        synced: log['synced'] == true,
+        loc: log['loc'] as String? ?? 'Discovery Zone',
         group: 'My Scans',
         regions: 'Logged In Field',
       ));
     }
 
-    // 2. Load all minerals from Knowledge Base (minerals_db.json)
-    final db = _classifier.mineralDatabase;
-    final colorPalette = [
-      0xFF00C853, // Green
-      0xFF00E5FF, // Cyan
-      0xFFD4AF37, // Gold
-      0xFFFF9100, // Orange
-      0xFF6366F1, // Indigo
-      0xFFEC4899, // Pink
-      0xFF10B981, // Emerald
-      0xFFEAB308, // Yellow
-    ];
-
-    int colorIdx = 0;
-    db.forEach((key, specimen) {
-      // Avoid duplicating if already in user logs as first item
-      final color = colorPalette[colorIdx % colorPalette.length];
-      colorIdx++;
-
-      items.add(SpecimenItem(
-        name: specimen.name,
-        formula: specimen.chemicalFormula,
-        conf: 95,
-        grade: specimen.rarityTier.contains('Rare') || specimen.rarityTier.contains('Gem')
-            ? 'Gemstones'
-            : specimen.group.contains('ORE') || specimen.group.contains('COPPER')
-                ? 'Copper Ores'
-                : 'Catalog',
-        date: 'African Index',
-        colorHex: color,
-        synced: true,
-        loc: specimen.africanRegions.isNotEmpty ? specimen.africanRegions.first : 'Africa',
-        group: specimen.group,
-        regions: specimen.africanRegions.join(', '),
-      ));
-    });
-
     allSpecimens.assignAll(items);
+  }
+
+  int _getMineralColorHex(String name) {
+    final lower = name.toLowerCase();
+    if (lower.contains('malachite')) return 0xFF00C853;
+    if (lower.contains('tanzanite') || lower.contains('azurite')) return 0xFF6366F1;
+    if (lower.contains('gold') || lower.contains('pyrite') || lower.contains('coltan')) return 0xFFD4AF37;
+    if (lower.contains('bornite') || lower.contains('copper')) return 0xFFFF9100;
+    if (lower.contains('chrysocolla') || lower.contains('tourmaline') || lower.contains('quartz')) return 0xFF00E5FF;
+    if (lower.contains('biotite') || lower.contains('emerald')) return 0xFF10B981;
+    return 0xFF00E5FF;
   }
 
   List<SpecimenItem> get filteredSpecimens {

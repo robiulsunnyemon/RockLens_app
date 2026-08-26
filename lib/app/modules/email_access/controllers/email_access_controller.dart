@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../core/values/app_strings.dart';
+import '../../../core/widgets/offline_mode_sheet.dart';
 import '../../../core/widgets/otzar_dialog.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../data/services/storage_service.dart';
@@ -86,11 +87,16 @@ class EmailAccessController extends GetxController {
       }
     } else {
       HapticFeedback.heavyImpact();
-      OtzarDialog.show(
-        title: 'Authentication Notice',
-        message: result.message ?? 'Failed to verify email. Please try again.',
-        type: OtzarDialogType.error,
-      );
+      if (result.message == 'NO_INTERNET_CONNECTION' ||
+          (result.message != null && result.message!.toLowerCase().contains('connection error'))) {
+        OfflineModeSheet.show(onRetry: submitEmail);
+      } else {
+        OtzarDialog.show(
+          title: 'Authentication Notice',
+          message: result.message ?? 'Failed to verify email. Please try again.',
+          type: OtzarDialogType.error,
+        );
+      }
     }
   }
 

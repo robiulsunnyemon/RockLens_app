@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'package:get/get.dart';
 import '../../../core/values/app_strings.dart';
+import '../../../data/services/storage_service.dart';
 import '../../../routes/app_pages.dart';
 
 class SplashController extends GetxController {
+  final StorageService _storage = Get.find<StorageService>();
   final currentStepIndex = 0.obs;
   final progress = 0.0.obs;
 
@@ -34,7 +36,12 @@ class SplashController extends GetxController {
     });
 
     _navTimer = Timer(const Duration(milliseconds: 3200), () {
-      Get.offNamed(Routes.ONBOARDING);
+      // Auto-Login: Check if valid access token & user profile exist in storage
+      if (_storage.isAuthenticated) {
+        Get.offAllNamed(Routes.HOME);
+      } else {
+        Get.offNamed(Routes.ONBOARDING);
+      }
     });
   }
 

@@ -110,7 +110,7 @@ class GisMapController extends GetxController {
     }
   }
 
-  /// Load real pins from user's storage discoveries + verified African deposit coordinates
+  /// Load real pins from user's storage discoveries exclusively
   void loadAllMapPins() {
     final List<MapPin> loaded = [];
 
@@ -154,105 +154,14 @@ class GisMapController extends GetxController {
       ));
     }
 
-    // 2. Real Major African Mining Deposits & Concessions
-    final africanReserves = [
-      const MapPin(
-        id: 'KAT-01',
-        name: 'Malachite & Cobalt Ridge',
-        formula: 'Cu₂CO₃(OH)₂ + Co',
-        colorHex: 0xFF00C853,
-        conf: 96,
-        latitude: -11.6600,
-        longitude: 27.4800,
-        xRatio: 0.46,
-        yRatio: 0.32,
-        elevation: '1,247m ASL',
-        date: 'Active Concession',
-        locationName: 'Katanga Copper Crescent · DR Congo',
-        isUserDiscovery: false,
-      ),
-      const MapPin(
-        id: 'MER-02',
-        name: 'Tanzanite Block C',
-        formula: 'Ca₂Al₃(SiO₄)₃(OH)+V',
-        colorHex: 0xFF6366F1,
-        conf: 98,
-        latitude: -3.5800,
-        longitude: 37.0100,
-        xRatio: 0.68,
-        yRatio: 0.29,
-        elevation: '1,420m ASL',
-        date: 'Exclusive Zone',
-        locationName: 'Merelani Hills · Tanzania',
-        isUserDiscovery: false,
-      ),
-      const MapPin(
-        id: 'KIV-03',
-        name: 'Coltan & Tantalite Vein',
-        formula: '(Fe,Mn)Ta₂O₆',
-        colorHex: 0xFFD4AF37,
-        conf: 94,
-        latitude: -1.6700,
-        longitude: 29.2300,
-        xRatio: 0.38,
-        yRatio: 0.48,
-        elevation: '1,560m ASL',
-        date: 'Strategic Reserve',
-        locationName: 'Kivu Mining Belt · DR Congo',
-        isUserDiscovery: false,
-      ),
-      const MapPin(
-        id: 'WIT-04',
-        name: 'Pyrite & Gold Quartz Reef',
-        formula: 'FeS₂ + Au Reef',
-        colorHex: 0xFFFF9100,
-        conf: 89,
-        latitude: -26.2000,
-        longitude: 28.0400,
-        xRatio: 0.52,
-        yRatio: 0.72,
-        elevation: '1,750m ASL',
-        date: 'Major Reef',
-        locationName: 'Witwatersrand Basin · South Africa',
-        isUserDiscovery: false,
-      ),
-      const MapPin(
-        id: 'NAM-05',
-        name: 'Quartz & Tourmaline Zone',
-        formula: 'SiO₂ + Pegmatite',
-        colorHex: 0xFF00E5FF,
-        conf: 99,
-        latitude: -21.1500,
-        longitude: 14.5800,
-        xRatio: 0.31,
-        yRatio: 0.65,
-        elevation: '2,573m ASL',
-        date: 'Pegmatite Ridge',
-        locationName: 'Brandberg Complex · Namibia',
-        isUserDiscovery: false,
-      ),
-      const MapPin(
-        id: 'MAD-06',
-        name: 'Biotite & Mica Pegmatite',
-        formula: 'K(Mg,Fe)₃AlSi₃O₁₀(OH)₂',
-        colorHex: 0xFF10B981,
-        conf: 91,
-        latitude: -18.8700,
-        longitude: 47.5000,
-        xRatio: 0.82,
-        yRatio: 0.58,
-        elevation: '1,120m ASL',
-        date: 'Felsic Belt',
-        locationName: 'Central Pegmatites · Madagascar',
-        isUserDiscovery: false,
-      ),
-    ];
-
-    loaded.addAll(africanReserves);
     allPins.assignAll(loaded);
 
-    if (allPins.isNotEmpty && selectedPin.value == null) {
-      selectedPin.value = allPins.first;
+    if (allPins.isNotEmpty) {
+      if (selectedPin.value == null || !allPins.any((p) => p.id == selectedPin.value?.id)) {
+        selectedPin.value = allPins.first;
+      }
+    } else {
+      selectedPin.value = null;
     }
   }
 

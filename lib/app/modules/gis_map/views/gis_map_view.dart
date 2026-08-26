@@ -276,10 +276,75 @@ class GisMapView extends GetView<GisMapController> {
                   )),
             ),
 
-            // 4. Bottom Selected Pin Drawer Card
+            // 4. Bottom Selected Pin Drawer Card or Empty Radar State
             Obx(() {
+              final pins = controller.filteredPins;
               final pin = controller.selectedPin.value;
               final isOpen = controller.isDrawerOpen.value;
+
+              if (pins.isEmpty) {
+                return Positioned(
+                  bottom: 16,
+                  left: 16,
+                  right: 16,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface.withValues(alpha: 0.92),
+                      borderRadius: AppDimensions.radius16,
+                      border: Border.all(
+                        color: AppColors.surfaceBorder,
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.5),
+                          blurRadius: 20,
+                          offset: const Offset(0, -4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.ore.withValues(alpha: 0.12),
+                          ),
+                          child: const Icon(Icons.radar_rounded, color: AppColors.ore, size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'NO FIELD CLAIMS RECORDED',
+                                style: AppTypography.hudTicker.copyWith(
+                                  color: AppColors.quartz,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Scan and log mineral specimens with GPS to drop interactive field claim pins.',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: AppColors.subtle,
+                                  fontSize: 10.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
 
               if (pin == null || !isOpen) return const SizedBox.shrink();
 

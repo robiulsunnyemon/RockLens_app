@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_colors.dart';
@@ -21,9 +22,9 @@ class HomeView extends GetView<HomeController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: AppDimensions.p10),
+              const SizedBox(height: AppDimensions.p8),
 
-              // 1. FIXED: Top Header Row
+              // 1. Top Header Row
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -54,15 +55,15 @@ class HomeView extends GetView<HomeController> {
                           ],
                         ),
                         const SizedBox(height: 2),
-                        Text(
-                          'Good afternoon, ${controller.operatorName}',
-                          style: AppTypography.displayMedium.copyWith(
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        Obx(() => Text(
+                              'Good afternoon, ${controller.operatorName}',
+                              style: AppTypography.displayMedium.copyWith(
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            )),
                       ],
                     ),
                   ),
@@ -71,138 +72,189 @@ class HomeView extends GetView<HomeController> {
                   // Avatar Circle
                   GestureDetector(
                     onTap: controller.goToProfile,
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: AppColors.goldGradient,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.ore.withValues(alpha: 0.3),
-                            blurRadius: 10,
+                    child: Obx(() {
+                      final localPath = controller.userAvatarPath.value;
+                      final remoteUrl = controller.userAvatarUrl.value;
+
+                      Widget avatarChild;
+                      if (localPath != null && File(localPath).existsSync()) {
+                        avatarChild = ClipOval(
+                          child: Image.file(
+                            File(localPath),
+                            width: 40,
+                            height: 40,
+                            fit: BoxFit.cover,
                           ),
-                        ],
+                        );
+                      } else if (remoteUrl != null && remoteUrl.isNotEmpty) {
+                        avatarChild = ClipOval(
+                          child: Image.network(
+                            remoteUrl,
+                            width: 40,
+                            height: 40,
+                            fit: BoxFit.cover,
+                            errorBuilder: (ctx, err, stack) => Center(
+                              child: Text(
+                                controller.initials,
+                                style: AppTypography.buttonText.copyWith(
+                                  color: AppColors.litho,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      } else {
+                        avatarChild = Center(
+                          child: Text(
+                            controller.initials,
+                            style: AppTypography.buttonText.copyWith(
+                              color: AppColors.litho,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        );
+                      }
+
+                      return Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: AppColors.goldGradient,
+                          border: Border.all(color: AppColors.ore, width: 1),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.ore.withValues(alpha: 0.3),
+                              blurRadius: 10,
+                            ),
+                          ],
+                        ),
+                        child: avatarChild,
+                      );
+                    }),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppDimensions.p10),
+
+              // 2. Dynamic HUD Bar
+              Obx(() => HudBarWidget(pending: controller.pendingSyncCount.value)),
+              const SizedBox(height: AppDimensions.p8),
+
+              // 3. Dynamic Sync Alert Banner (Visible only when pending syncs exist)
+              Obx(() {
+                final pending = controller.pendingSyncCount.value;
+                if (pending <= 0) return const SizedBox.shrink();
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: AppDimensions.p8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppDimensions.p12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.ember.withValues(alpha: 0.1),
+                    borderRadius: AppDimensions.radius12,
+                    border: Border.all(
+                      color: AppColors.ember.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: AppColors.ember,
+                              ),
+                            ),
+                            const SizedBox(width: AppDimensions.p8),
+                            Expanded(
+                              child: Text(
+                                '$pending ${pending == 1 ? 'Scan' : 'Scans'} Staged for Cloud Sync',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: const Color(0xFFFF9100),
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      child: Center(
+                      const SizedBox(width: AppDimensions.p8),
+                      ElevatedButton(
+                        onPressed: controller.goToSync,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFF9100),
+                          foregroundColor: AppColors.litho,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppDimensions.p10,
+                            vertical: 4,
+                          ),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppDimensions.r8),
+                          ),
+                        ),
                         child: Text(
-                          controller.initials,
-                          style: AppTypography.buttonText.copyWith(
+                          'SYNC NOW',
+                          style: AppTypography.hudTicker.copyWith(
                             color: AppColors.litho,
-                            fontSize: 13,
+                            fontSize: 9.5,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
-              const SizedBox(height: AppDimensions.p10),
+                );
+              }),
 
-              // 2. FIXED: HUD Bar
-              const HudBarWidget(pending: 3),
-              const SizedBox(height: AppDimensions.p8),
-
-              // 3. FIXED: Sync Alert Banner
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppDimensions.p12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.ember.withValues(alpha: 0.1),
-                  borderRadius: AppDimensions.radius12,
-                  border: Border.all(
-                    color: AppColors.ember.withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColors.ember,
-                          ),
-                        ),
-                        const SizedBox(width: AppDimensions.p8),
-                        Text(
-                          '3 Scans Staged for Cloud Sync',
-                          style: AppTypography.bodySmall.copyWith(
-                            color: const Color(0xFFFF9100),
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    ElevatedButton(
-                      onPressed: controller.goToSync,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFF9100),
-                        foregroundColor: AppColors.litho,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppDimensions.p10,
-                          vertical: 4,
-                        ),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppDimensions.r8),
-                        ),
-                      ),
-                      child: Text(
-                        'SYNC NOW',
-                        style: AppTypography.hudTicker.copyWith(
-                          color: AppColors.litho,
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppDimensions.p10),
-
-              // 4. FIXED: Hero AI Scan Card
+              // 4. Hero AI Scan Card
               HeroScanCard(onTap: controller.startScanning),
               const SizedBox(height: AppDimensions.p10),
 
-              // 5. FIXED: Stats Row (3 Columns)
-              Row(
-                children: [
-                  _buildStatCard(
-                    label: "Today's Finds",
-                    value: '7',
-                    unit: 'specimens',
-                    color: AppColors.ore,
-                  ),
-                  const SizedBox(width: AppDimensions.p8),
-                  _buildStatCard(
-                    label: 'Est. Value',
-                    value: r'$4.2K',
-                    unit: 'approx.',
-                    color: AppColors.emerald,
-                  ),
-                  const SizedBox(width: AppDimensions.p8),
-                  _buildStatCard(
-                    label: 'Pending AI',
-                    value: '3',
-                    unit: 'in queue',
-                    color: const Color(0xFFFF9100),
-                  ),
-                ],
-              ),
+              // 5. Dynamic Real Stats Row
+              Obx(() => Row(
+                    children: [
+                      _buildStatCard(
+                        label: "Today's Finds",
+                        value: '${controller.todayFindsCount.value}',
+                        unit: 'specimens',
+                        color: AppColors.ore,
+                      ),
+                      const SizedBox(width: AppDimensions.p8),
+                      _buildStatCard(
+                        label: 'Est. Value',
+                        value: controller.estValueFormatted,
+                        unit: 'approx.',
+                        color: AppColors.emerald,
+                      ),
+                      const SizedBox(width: AppDimensions.p8),
+                      _buildStatCard(
+                        label: 'Pending Sync',
+                        value: '${controller.pendingSyncCount.value}',
+                        unit: 'in queue',
+                        color: const Color(0xFFFF9100),
+                      ),
+                    ],
+                  )),
               const SizedBox(height: AppDimensions.p12),
 
-              // 6. FIXED: Recent Specimens Header
+              // 6. Recent Specimens Header
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -230,10 +282,74 @@ class HomeView extends GetView<HomeController> {
               ),
               const SizedBox(height: AppDimensions.p8),
 
-              // 7. ONLY SCROLLABLE SECTION: Recent Specimens List
+              // 7. Recent Specimens List or High-Tech Empty State
               Expanded(
                 child: Obx(() {
                   final scans = controller.recentScans;
+
+                  if (scans.isEmpty) {
+                    return Center(
+                      child: SingleChildScrollView(
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 24,
+                            horizontal: 20,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface.withValues(alpha: 0.6),
+                            borderRadius: AppDimensions.radius16,
+                            border: Border.all(
+                              color: AppColors.surfaceBorder,
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppColors.ore.withValues(alpha: 0.1),
+                                  border: Border.all(
+                                    color: AppColors.ore.withValues(alpha: 0.25),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.radar_rounded,
+                                  color: AppColors.ore,
+                                  size: 28,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'NO SPECIMEN DISCOVERIES RECORDED',
+                                style: AppTypography.hudTicker.copyWith(
+                                  color: AppColors.quartz,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                'Your geological vault is currently empty. Tap "INITIATE SCAN" above to classify and log your first field discovery.',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: AppColors.subtle,
+                                  fontSize: 11.5,
+                                  height: 1.4,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
                   return ListView.builder(
                     physics: const BouncingScrollPhysics(),
                     padding: const EdgeInsets.only(bottom: AppDimensions.p16),
@@ -283,25 +399,31 @@ class HomeView extends GetView<HomeController> {
                                 children: [
                                   Row(
                                     children: [
-                                      Text(
-                                        scan['name'] as String,
-                                        style: AppTypography.displayMedium.copyWith(
-                                          fontSize: 13.5,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(width: AppDimensions.p6),
-                                      Expanded(
+                                      Flexible(
                                         child: Text(
-                                          scan['formula'] as String,
-                                          style: AppTypography.monoTag.copyWith(
-                                            color: AppColors.subtle,
-                                            fontSize: 9,
+                                          scan['name'] as String,
+                                          style: AppTypography.displayMedium.copyWith(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
                                           ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
+                                      if ((scan['formula'] as String).isNotEmpty) ...[
+                                        const SizedBox(width: AppDimensions.p6),
+                                        Flexible(
+                                          child: Text(
+                                            scan['formula'] as String,
+                                            style: AppTypography.monoTag.copyWith(
+                                              color: AppColors.subtle,
+                                              fontSize: 9,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
                                     ],
                                   ),
                                   const SizedBox(height: 2),
@@ -331,12 +453,15 @@ class HomeView extends GetView<HomeController> {
                                 ],
                               ),
                             ),
+                            const SizedBox(width: AppDimensions.p8),
                             Text(
                               scan['time'] as String,
                               style: AppTypography.hudTicker.copyWith(
                                 color: AppColors.muted,
                                 fontSize: 9.5,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),

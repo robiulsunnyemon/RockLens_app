@@ -153,22 +153,45 @@ class SyncEngineView extends GetView<SyncEngineController> {
                     ),
                     const SizedBox(height: AppDimensions.p10),
 
-                    // Force Sync Button
+                    // Dynamic Sync / Up-to-date Button
                     Obx(() {
                       final syncing = controller.isSyncing.value;
+                      final hasPending = controller.pendingCount > 0;
+                      final hasItems = controller.items.isNotEmpty;
+
+                      Color bgColor;
+                      Color fgColor;
+                      Color borderColor;
+
+                      if (syncing) {
+                        bgColor = AppColors.surface;
+                        fgColor = AppColors.ore;
+                        borderColor = AppColors.ore.withValues(alpha: 0.4);
+                      } else if (hasPending) {
+                        bgColor = AppColors.ore;
+                        fgColor = AppColors.litho;
+                        borderColor = Colors.transparent;
+                      } else if (hasItems) {
+                        bgColor = AppColors.emerald.withValues(alpha: 0.12);
+                        fgColor = AppColors.emerald;
+                        borderColor = AppColors.emerald.withValues(alpha: 0.35);
+                      } else {
+                        bgColor = AppColors.surface;
+                        fgColor = AppColors.subtle;
+                        borderColor = AppColors.surfaceBorder;
+                      }
+
                       return SizedBox(
                         width: double.infinity,
                         height: 44,
                         child: ElevatedButton(
                           onPressed: syncing ? null : controller.forceBackgroundSync,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: syncing ? AppColors.surface : AppColors.ore,
-                            foregroundColor: syncing ? AppColors.ore : AppColors.litho,
+                            backgroundColor: bgColor,
+                            foregroundColor: fgColor,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(AppDimensions.r12),
-                              side: BorderSide(
-                                color: syncing ? AppColors.ore.withValues(alpha: 0.4) : Colors.transparent,
-                              ),
+                              side: BorderSide(color: borderColor),
                             ),
                             elevation: 0,
                           ),
@@ -197,14 +220,24 @@ class SyncEngineView extends GetView<SyncEngineController> {
                               : Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    const Icon(Icons.cloud_upload_outlined, size: 16, color: AppColors.litho),
+                                    Icon(
+                                      hasPending
+                                          ? Icons.cloud_upload_outlined
+                                          : hasItems
+                                              ? Icons.check_circle_outline_rounded
+                                              : Icons.cloud_done_outlined,
+                                      size: 16,
+                                      color: fgColor,
+                                    ),
                                     const SizedBox(width: 6),
                                     Text(
-                                      controller.pendingCount > 0
+                                      hasPending
                                           ? 'Force Background Sync (${controller.pendingCount})'
-                                          : 'Re-Sync All Scans to Cloud (${controller.items.length})',
+                                          : hasItems
+                                              ? 'All Scans Synchronized ✓'
+                                              : 'No Scans in Queue',
                                       style: AppTypography.buttonText.copyWith(
-                                        color: AppColors.litho,
+                                        color: fgColor,
                                         fontSize: 13,
                                         fontWeight: FontWeight.bold,
                                       ),

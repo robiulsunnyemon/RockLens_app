@@ -65,16 +65,29 @@ class ApiClient extends GetConnect {
     });
   }
 
+  /// Determine if an API failure was caused by lack of network connectivity
+  bool isNetworkError(Response response) {
+    final statusText = (response.statusText ?? '').toLowerCase();
+    final isSocket = statusText.contains('socketexception') ||
+        statusText.contains('failed host lookup') ||
+        statusText.contains('network is unreachable') ||
+        statusText.contains('connection refused') ||
+        statusText.contains('connection timed out') ||
+        statusText.contains('clientexception') ||
+        statusText.contains('os error: no address associated with hostname');
+    return response.statusCode == null || response.statusCode == 0 || isSocket;
+  }
+
   /// Helper to extract user-friendly error messages from API response
   String parseErrorMessage(Response response) {
     if (response.body is Map && response.body['detail'] != null) {
       return response.body['detail'].toString();
     }
+    if (isNetworkError(response)) {
+      return 'NO_INTERNET_CONNECTION';
+    }
     if (response.statusText != null && response.statusText!.isNotEmpty) {
       return response.statusText!;
-    }
-    if (response.statusCode == null || response.statusCode == 0) {
-      return 'Cannot connect to backend server. Ensure backend is running.';
     }
     return 'An unexpected server error occurred (${response.statusCode})';
   }

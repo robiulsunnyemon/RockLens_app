@@ -236,6 +236,15 @@ class LoggingController extends GetxController {
   Future<void> saveDiscovery() async {
     HapticFeedback.heavyImpact();
 
+    String resolvedCity = city.value;
+    String resolvedCountry = country.value;
+    if (resolvedCity == 'Locating...' || resolvedCity.isEmpty) {
+      resolvedCity = 'Dhaka';
+    }
+    if (resolvedCountry == 'Detecting...' || resolvedCountry.isEmpty) {
+      resolvedCountry = 'Bangladesh';
+    }
+
     final discoveryItem = {
       'tag': specimenTag.value,
       'name': mineralName.value,
@@ -252,8 +261,8 @@ class LoggingController extends GetxController {
       'lat': latitude.value,
       'lon': longitude.value,
       'altitude': altitude.value,
-      'city': city.value,
-      'country': country.value,
+      'city': resolvedCity,
+      'country': resolvedCountry,
       'timestamp': DateTime.now().toIso8601String(),
     };
 

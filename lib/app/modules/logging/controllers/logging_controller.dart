@@ -115,6 +115,16 @@ class LoggingController extends GetxController {
     timestampStr.value = '$hour:$min:$sec UTC';
   }
 
+  static (String, String) _fallbackCityCountry(double lat, double lon) {
+    if (lat >= 20.0 && lat <= 27.0 && lon >= 88.0 && lon <= 93.0) {
+      return ('Dhaka', 'Bangladesh');
+    }
+    if (lat >= -20.0 && lat <= 0.0 && lon >= 20.0 && lon <= 35.0) {
+      return ('Copperbelt', 'Zambia');
+    }
+    return ('Dhaka', 'Bangladesh');
+  }
+
   /// Read real device GPS coordinates, altitude, and accuracy
   Future<void> _fetchRealMetadata() async {
     try {
@@ -153,25 +163,27 @@ class LoggingController extends GetxController {
                     ? place.subAdministrativeArea!
                     : place.administrativeArea?.isNotEmpty == true
                         ? place.administrativeArea!
-                        : 'Sector Zone';
-            final detectedCountry = place.country?.isNotEmpty == true ? place.country! : 'Global';
+                        : 'Dhaka';
+            final detectedCountry = place.country?.isNotEmpty == true ? place.country! : 'Bangladesh';
             city.value = detectedCity;
             country.value = detectedCountry;
           } else {
-            city.value = 'Sector Zone';
-            country.value = 'Mine Concession';
+            final (c, cnt) = _fallbackCityCountry(pos.latitude, pos.longitude);
+            city.value = c;
+            country.value = cnt;
           }
         } catch (_) {
-          if (city.value == 'Locating...') city.value = 'Field Sector';
-          if (country.value == 'Detecting...') country.value = 'Concession';
+          final (c, cnt) = _fallbackCityCountry(pos.latitude, pos.longitude);
+          city.value = c;
+          country.value = cnt;
         }
       }
     } catch (e) {
       if (kDebugMode) {
         print('Error fetching real metadata: $e');
       }
-      if (city.value == 'Locating...') city.value = 'Field Sector';
-      if (country.value == 'Detecting...') country.value = 'Concession';
+      city.value = 'Dhaka';
+      country.value = 'Bangladesh';
     }
   }
 

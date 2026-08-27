@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/values/app_dimensions.dart';
 import '../../../core/values/app_strings.dart';
+import '../../../core/widgets/otzar_cached_image.dart';
 import '../../../routes/app_pages.dart';
 import '../controllers/profile_controller.dart';
 
@@ -55,32 +56,22 @@ class ProfileView extends GetView<ProfileController> {
                                   final remoteUrl = controller.userAvatarUrl.value;
                                   final isUploading = controller.isUploadingAvatar.value;
 
+                                  final imageSrc = (localPath != null && File(localPath).existsSync()) ? localPath : remoteUrl;
                                   Widget avatarContent;
-
-                                  if (localPath != null && File(localPath).existsSync()) {
-                                    avatarContent = ClipOval(
-                                      child: Image.file(
-                                        File(localPath),
-                                        width: 58,
-                                        height: 58,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    );
-                                  } else if (remoteUrl != null && remoteUrl.isNotEmpty) {
-                                    avatarContent = ClipOval(
-                                      child: Image.network(
-                                        remoteUrl,
-                                        width: 58,
-                                        height: 58,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (ctx, err, stack) => Center(
-                                          child: Text(
-                                            controller.initials,
-                                            style: AppTypography.displayMedium.copyWith(
-                                              color: AppColors.litho,
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                            ),
+                                  if (imageSrc != null && imageSrc.isNotEmpty) {
+                                    avatarContent = OtzarCachedImage(
+                                      imageUrlOrPath: imageSrc,
+                                      width: 58,
+                                      height: 58,
+                                      fit: BoxFit.cover,
+                                      borderRadius: BorderRadius.circular(29),
+                                      errorWidget: Center(
+                                        child: Text(
+                                          controller.initials,
+                                          style: AppTypography.displayMedium.copyWith(
+                                            color: AppColors.litho,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
                                           ),
                                         ),
                                       ),

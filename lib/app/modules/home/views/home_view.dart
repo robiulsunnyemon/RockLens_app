@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/values/app_assets.dart';
 import '../../../core/values/app_dimensions.dart';
+import '../../../core/widgets/otzar_cached_image.dart';
 import '../../../core/widgets/specimen_details_sheet.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/hero_scan_card.dart';
@@ -76,32 +77,22 @@ class HomeView extends GetView<HomeController> {
                     child: Obx(() {
                       final localPath = controller.userAvatarPath.value;
                       final remoteUrl = controller.userAvatarUrl.value;
-
                       Widget avatarChild;
-                      if (localPath != null && File(localPath).existsSync()) {
-                        avatarChild = ClipOval(
-                          child: Image.file(
-                            File(localPath),
-                            width: 40,
-                            height: 40,
-                            fit: BoxFit.cover,
-                          ),
-                        );
-                      } else if (remoteUrl != null && remoteUrl.isNotEmpty) {
-                        avatarChild = ClipOval(
-                          child: Image.network(
-                            remoteUrl,
-                            width: 40,
-                            height: 40,
-                            fit: BoxFit.cover,
-                            errorBuilder: (ctx, err, stack) => Center(
-                              child: Text(
-                                controller.initials,
-                                style: AppTypography.buttonText.copyWith(
-                                  color: AppColors.litho,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                      final imageSrc = (localPath != null && File(localPath).existsSync()) ? localPath : remoteUrl;
+                      if (imageSrc != null && imageSrc.isNotEmpty) {
+                        avatarChild = OtzarCachedImage(
+                          imageUrlOrPath: imageSrc,
+                          width: 40,
+                          height: 40,
+                          fit: BoxFit.cover,
+                          borderRadius: BorderRadius.circular(20),
+                          errorWidget: Center(
+                            child: Text(
+                              controller.initials,
+                              style: AppTypography.buttonText.copyWith(
+                                color: AppColors.litho,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
@@ -392,37 +383,22 @@ class HomeView extends GetView<HomeController> {
                                 ),
                               ),
                               child: (scan['photo'] != null && (scan['photo'] as String).isNotEmpty)
-                                  ? ClipRRect(
+                                  ? OtzarCachedImage(
+                                      imageUrlOrPath: scan['photo'] as String,
+                                      width: 38,
+                                      height: 38,
+                                      fit: BoxFit.cover,
                                       borderRadius: BorderRadius.circular(AppDimensions.r10 - 1),
-                                      child: (scan['photo'] as String).startsWith('http')
-                                          ? Image.network(
-                                              scan['photo'] as String,
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (ctx, err, stack) => Center(
-                                                child: Container(
-                                                  width: 12,
-                                                  height: 12,
-                                                  decoration: BoxDecoration(
-                                                    color: color,
-                                                    borderRadius: BorderRadius.circular(2),
-                                                  ),
-                                                ),
-                                              ),
-                                            )
-                                          : Image.file(
-                                              File(scan['photo'] as String),
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (ctx, err, stack) => Center(
-                                                child: Container(
-                                                  width: 12,
-                                                  height: 12,
-                                                  decoration: BoxDecoration(
-                                                    color: color,
-                                                    borderRadius: BorderRadius.circular(2),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
+                                      errorWidget: Center(
+                                        child: Container(
+                                          width: 12,
+                                          height: 12,
+                                          decoration: BoxDecoration(
+                                            color: color,
+                                            borderRadius: BorderRadius.circular(2),
+                                          ),
+                                        ),
+                                      ),
                                     )
                                   : Center(
                                       child: Container(

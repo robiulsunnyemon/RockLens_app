@@ -58,20 +58,51 @@ class SyncEngineController extends GetxController {
     return '${totalMb.toStringAsFixed(1)} MB';
   }
 
+  Timer? _autoSyncHeartbeatTimer;
+
   @override
   void onInit() {
     super.onInit();
     isCellularEnabled.value = _storage.isCellularSyncEnabled;
     loadSyncQueue();
-    checkBackendConnectivity().then((_) {
-      if (!isOfflineMode.value) {
-        fetchCloudSpecimens().then((_) {
-          if (pendingCount > 0) {
-            forceBackgroundSync();
-          }
-        });
-      }
+    _startRealtimeSyncMonitoring();
+  }
+
+  @override
+  void onClose() {
+    _autoSyncHeartbeatTimer?.cancel();
+    super.onClose();
+  }
+
+  /// Real-time connectivity watcher: detects network recovery and auto-pushes offline queue
+  void _startRealtimeSyncMonitoring() {
+    _autoSyncHeartbeatTimer?.cancel();
+    // Run initial check immediately
+    _performHeartbeatSync();
+
+    // Continuously monitor every 8 seconds in the background
+    _autoSyncHeartbeatTimer = Timer.periodic(const Duration(seconds: 8), (_) {
+      _performHeartbeatSync();
     });
+  }
+
+  Future<void> _performHeartbeatSync() async {
+    if (isSyncing.value) return;
+
+    final wasOffline = isOfflineMode.value;
+    await checkBackendConnectivity();
+
+    // If online, check if we need to sync pending items or fetch new cloud records
+    if (!isOfflineMode.value) {
+      if (wasOffline || pendingCount > 0) {
+        if (kDebugMode) print('Online connection detected! Auto-syncing pending offline items...');
+        loadSyncQueue();
+        if (pendingCount > 0) {
+          await forceBackgroundSync();
+        }
+      }
+      await fetchCloudSpecimens();
+    }
   }
 
   /// Ping FastAPI backend to check real online cloud connectivity

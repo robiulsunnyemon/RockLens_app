@@ -1,10 +1,10 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../values/app_dimensions.dart';
+import 'otzar_cached_image.dart';
 import '../../data/services/tflite_classifier_service.dart';
 import '../../modules/main_nav/controllers/main_nav_controller.dart';
 
@@ -502,21 +502,13 @@ class SpecimenDetailsSheet {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            isNetwork
-                ? Image.network(
-                    photoUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (ctx, err, stack) => Center(
-                      child: Icon(Icons.broken_image_rounded, size: 40, color: color),
-                    ),
-                  )
-                : Image.file(
-                    File(photoUrl),
-                    fit: BoxFit.cover,
-                    errorBuilder: (ctx, err, stack) => Center(
-                      child: Icon(Icons.broken_image_rounded, size: 40, color: color),
-                    ),
-                  ),
+            OtzarCachedImage(
+              imageUrlOrPath: photoUrl,
+              fit: BoxFit.cover,
+              errorWidget: Center(
+                child: Icon(Icons.broken_image_rounded, size: 40, color: color),
+              ),
+            ),
             // Source Badge
             Positioned(
               top: 10,

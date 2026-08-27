@@ -1,9 +1,9 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/values/app_dimensions.dart';
+import '../../../core/widgets/otzar_cached_image.dart';
 import '../../../core/widgets/specimen_details_sheet.dart';
 import '../controllers/vault_controller.dart';
 
@@ -284,23 +284,15 @@ class VaultView extends GetView<VaultController> {
                                   ),
                                 ),
                                 child: (item.photo != null && item.photo!.isNotEmpty)
-                                    ? ClipRRect(
+                                    ? OtzarCachedImage(
+                                        imageUrlOrPath: item.photo!,
+                                        width: double.infinity,
+                                        height: 64,
+                                        fit: BoxFit.cover,
                                         borderRadius: BorderRadius.circular(AppDimensions.r12 - 1),
-                                        child: item.photo!.startsWith('http')
-                                            ? Image.network(
-                                                item.photo!,
-                                                fit: BoxFit.cover,
-                                                errorBuilder: (ctx, err, stack) => Center(
-                                                  child: Icon(Icons.diamond_outlined, size: 32, color: color),
-                                                ),
-                                              )
-                                            : Image.file(
-                                                File(item.photo!),
-                                                fit: BoxFit.cover,
-                                                errorBuilder: (ctx, err, stack) => Center(
-                                                  child: Icon(Icons.diamond_outlined, size: 32, color: color),
-                                                ),
-                                              ),
+                                        errorWidget: Center(
+                                          child: Icon(Icons.diamond_outlined, size: 32, color: color),
+                                        ),
                                       )
                                     : Center(
                                         child: Icon(
@@ -408,37 +400,22 @@ class VaultView extends GetView<VaultController> {
                                 ),
                               ),
                               child: (item.photo != null && item.photo!.isNotEmpty)
-                                  ? ClipRRect(
+                                  ? OtzarCachedImage(
+                                      imageUrlOrPath: item.photo!,
+                                      width: 38,
+                                      height: 38,
+                                      fit: BoxFit.cover,
                                       borderRadius: BorderRadius.circular(AppDimensions.r10 - 1),
-                                      child: item.photo!.startsWith('http')
-                                          ? Image.network(
-                                              item.photo!,
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (ctx, err, stack) => Center(
-                                                child: Container(
-                                                  width: 12,
-                                                  height: 12,
-                                                  decoration: BoxDecoration(
-                                                    color: color,
-                                                    borderRadius: BorderRadius.circular(2),
-                                                  ),
-                                                ),
-                                              ),
-                                            )
-                                          : Image.file(
-                                              File(item.photo!),
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (ctx, err, stack) => Center(
-                                                child: Container(
-                                                  width: 12,
-                                                  height: 12,
-                                                  decoration: BoxDecoration(
-                                                    color: color,
-                                                    borderRadius: BorderRadius.circular(2),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
+                                      errorWidget: Center(
+                                        child: Container(
+                                          width: 12,
+                                          height: 12,
+                                          decoration: BoxDecoration(
+                                            color: color,
+                                            borderRadius: BorderRadius.circular(2),
+                                          ),
+                                        ),
+                                      ),
                                     )
                                   : Center(
                                       child: Container(

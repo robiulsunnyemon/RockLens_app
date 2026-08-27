@@ -273,16 +273,29 @@ class ScannerController extends GetxController {
         maxHeight: 1024,
       );
       if (image != null) {
-        if (Get.isRegistered<TfliteClassifierService>()) {
-          Get.find<TfliteClassifierService>().capturedPhotoPath.value = image.path;
-        }
-        captureAndAnalyze();
+        await analyzePickedPhoto(image.path);
       }
     } catch (e) {
       if (kDebugMode) {
         print('Gallery pick error: $e');
       }
     }
+  }
+
+  /// Analyze a selected gallery photo without triggering camera capture
+  Future<void> analyzePickedPhoto(String path) async {
+    if (isScanning.value) return;
+    HapticFeedback.mediumImpact();
+    isScanning.value = true;
+
+    if (Get.isRegistered<TfliteClassifierService>()) {
+      Get.find<TfliteClassifierService>().capturedPhotoPath.value = path;
+    }
+
+    Timer(const Duration(milliseconds: 600), () {
+      isScanning.value = false;
+      Get.toNamed(Routes.PROCESSING);
+    });
   }
 
   /// Capture image from live camera feed and run analysis

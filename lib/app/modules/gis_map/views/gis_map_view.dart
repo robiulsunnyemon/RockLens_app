@@ -1,9 +1,9 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/values/app_dimensions.dart';
+import '../../../core/widgets/otzar_cached_image.dart';
 import '../controllers/gis_map_controller.dart';
 import '../widgets/gis_map_painter.dart';
 
@@ -455,23 +455,13 @@ class GisMapView extends GetView<GisMapController> {
                                     ),
                                   ),
                                   child: pin.photoPath != null
-                                      ? ClipRRect(
+                                      ? OtzarCachedImage(
+                                          imageUrlOrPath: pin.photoPath!,
+                                          fit: BoxFit.cover,
                                           borderRadius: BorderRadius.circular(AppDimensions.r10 - 1),
-                                          child: pin.photoPath!.startsWith('http')
-                                              ? Image.network(
-                                                  pin.photoPath!,
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder: (ctx, err, stack) => Center(
-                                                    child: Icon(Icons.diamond_outlined, color: color, size: 18),
-                                                  ),
-                                                )
-                                              : Image.file(
-                                                  File(pin.photoPath!),
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder: (ctx, err, stack) => Center(
-                                                    child: Icon(Icons.diamond_outlined, color: color, size: 18),
-                                                  ),
-                                                ),
+                                          errorWidget: Center(
+                                            child: Icon(Icons.diamond_outlined, color: color, size: 18),
+                                          ),
                                         )
                                       : Center(
                                           child: Icon(Icons.diamond_outlined, color: color, size: 18),

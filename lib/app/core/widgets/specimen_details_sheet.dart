@@ -26,6 +26,8 @@ class SpecimenDetailsSheet {
     final loc = data['loc'] as String? ?? 'Vein Discovery';
     final lat = data['lat'] as String? ?? '-12.9783°S';
     final lon = data['lon'] as String? ?? '028.6234°E';
+    final city = data['city'] as String? ?? 'Field Sector';
+    final country = data['country'] as String? ?? 'Mine Concession';
     final altitude = data['altitude'] as String? ?? '1,247m ASL';
     final notes = data['notes'] as String? ?? '';
     final isSynced = data['synced'] == true;
@@ -263,6 +265,14 @@ class SpecimenDetailsSheet {
                           const SizedBox(height: 8),
                           Row(
                             children: [
+                              Expanded(child: _buildTelemetryCell('CITY / LOCALITY', city)),
+                              const SizedBox(width: 8),
+                              Expanded(child: _buildTelemetryCell('COUNTRY', country)),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
                               Expanded(child: _buildTelemetryCell('ALTITUDE', altitude)),
                               const SizedBox(width: 8),
                               Expanded(child: _buildTelemetryCell('ZONE / CONCESSION', loc)),
@@ -315,12 +325,18 @@ class SpecimenDetailsSheet {
                                           fontSize: 9,
                                         ),
                                       ),
-                                      Text(
-                                        e.value,
-                                        style: AppTypography.bodySmall.copyWith(
-                                          color: AppColors.quartz,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          e.value,
+                                          textAlign: TextAlign.end,
+                                          style: AppTypography.bodySmall.copyWith(
+                                            color: AppColors.quartz,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
                                     ],

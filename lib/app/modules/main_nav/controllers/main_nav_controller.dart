@@ -47,13 +47,9 @@ class MainNavController extends GetxController {
         Get.find<GisMapController>().loadAllMapPins();
       }
 
-      // When switching to Sync Engine (tab 3), refresh sync queue and auto-sync if pending
+      // When switching to Sync Engine (tab 3), trigger live auto-sync immediately
       if (index == 3 && Get.isRegistered<SyncEngineController>()) {
-        final sync = Get.find<SyncEngineController>();
-        sync.loadSyncQueue();
-        if (!sync.isOfflineMode.value && sync.pendingCount > 0) {
-          sync.forceBackgroundSync();
-        }
+        Get.find<SyncEngineController>().triggerLiveAutoSync();
       }
 
       // When switching to Profile (tab 4), refresh real storage & profile stats

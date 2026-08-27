@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -64,26 +65,46 @@ class ResultView extends GetView<ResultController> {
               ),
               child: Row(
                 children: [
-                  // Mineral Color Swatch
-                  Container(
-                    width: 58,
-                    height: 58,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF1A4A2E), Color(0xFF2D7A4A)],
+                  // Mineral Captured Photo Preview / Color Swatch
+                  Obx(() {
+                    final photoPath = controller.capturedPhotoPath.value;
+                    final hasValidPhoto = photoPath != null &&
+                        photoPath.isNotEmpty &&
+                        File(photoPath).existsSync();
+
+                    return Container(
+                      width: 58,
+                      height: 58,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF1A4A2E), Color(0xFF2D7A4A)],
+                        ),
+                        borderRadius: AppDimensions.radius16,
+                        border: Border.all(
+                          color: AppColors.emerald.withValues(alpha: 0.4),
+                          width: 1.2,
+                        ),
                       ),
-                      borderRadius: AppDimensions.radius16,
-                      border: Border.all(
-                        color: AppColors.emerald.withValues(alpha: 0.4),
-                        width: 1.2,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.diamond_outlined,
-                      color: AppColors.emerald,
-                      size: 30,
-                    ),
-                  ),
+                      child: hasValidPhoto
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(AppDimensions.r16 - 1.2),
+                              child: Image.file(
+                                File(photoPath),
+                                fit: BoxFit.cover,
+                                errorBuilder: (ctx, err, stack) => const Icon(
+                                  Icons.diamond_outlined,
+                                  color: AppColors.emerald,
+                                  size: 30,
+                                ),
+                              ),
+                            )
+                          : const Icon(
+                              Icons.diamond_outlined,
+                              color: AppColors.emerald,
+                              size: 30,
+                            ),
+                    );
+                  }),
                   const SizedBox(width: AppDimensions.p14),
 
                   // Name & Formula

@@ -589,15 +589,17 @@ class GisMapView extends GetView<GisMapController> {
               ),
             ),
             const SizedBox(height: 2),
-            Text(
-              value,
-              style: AppTypography.hudTicker.copyWith(
-                color: AppColors.quartz,
-                fontSize: 9.5,
-                fontWeight: FontWeight.bold,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value,
+                style: AppTypography.hudTicker.copyWith(
+                  color: AppColors.quartz,
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

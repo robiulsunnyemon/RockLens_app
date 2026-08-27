@@ -18,6 +18,7 @@ class ResultController extends GetxController {
   final rarityTier = 'Common'.obs;
   final economicValue = 'Standard'.obs;
   final description = ''.obs;
+  RxnString get capturedPhotoPath => _classifier.capturedPhotoPath;
 
   @override
   void onInit() {

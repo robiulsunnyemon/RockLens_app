@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -28,13 +29,15 @@ class LoggingController extends GetxController {
   final chemicalFormula = 'Cu₂CO₃(OH)₂'.obs;
   final confidenceScore = 88.5.obs;
 
-  // 3. Real Dynamic Metadata
-  final latitude = '-12.9783°S'.obs;
-  final longitude = '028.6234°E'.obs;
-  final altitude = '1,247m ASL'.obs;
-  final gpsError = '±2.4m'.obs;
-  final timestampStr = '14:32:07 UTC'.obs;
-  final dateStr = '25 Aug 2026'.obs;
+  // 3. Real Dynamic Metadata & Geocoding
+  final latitude = 'Acquiring...'.obs;
+  final longitude = 'Acquiring...'.obs;
+  final altitude = 'Calibrating...'.obs;
+  final gpsError = '±--m'.obs;
+  final city = 'Locating...'.obs;
+  final country = 'Detecting...'.obs;
+  final timestampStr = '--:--:-- UTC'.obs;
+  final dateStr = 'Today'.obs;
   final weatherStr = 'Field Clear · 29°C'.obs;
   final tempStr = '29°C / 84°F'.obs;
 
@@ -62,6 +65,8 @@ class LoggingController extends GetxController {
   List<Map<String, String>> get metadataItems => [
         {'label': 'LAT', 'value': latitude.value},
         {'label': 'LON', 'value': longitude.value},
+        {'label': 'CITY', 'value': city.value},
+        {'label': 'COUNTRY', 'value': country.value},
         {'label': 'ALTITUDE', 'value': altitude.value},
         {'label': 'GPS ERROR', 'value': gpsError.value},
         {'label': 'TIMESTAMP', 'value': timestampStr.value},
@@ -107,7 +112,7 @@ class LoggingController extends GetxController {
     final hour = now.hour.toString().padLeft(2, '0');
     final min = now.minute.toString().padLeft(2, '0');
     final sec = now.second.toString().padLeft(2, '0');
-    timestampStr.value = '$hour:$min:$sec LOCAL';
+    timestampStr.value = '$hour:$min:$sec UTC';
   }
 
   /// Read real device GPS coordinates, altitude, and accuracy
@@ -136,11 +141,37 @@ class LoggingController extends GetxController {
           altitude.value = '${pos.altitude.round()}m ASL';
         }
         gpsError.value = '±${pos.accuracy.toStringAsFixed(1)}m';
+
+        // Reverse-geocode to get City & Country
+        try {
+          final placemarks = await placemarkFromCoordinates(pos.latitude, pos.longitude);
+          if (placemarks.isNotEmpty) {
+            final place = placemarks.first;
+            final detectedCity = place.locality?.isNotEmpty == true
+                ? place.locality!
+                : place.subAdministrativeArea?.isNotEmpty == true
+                    ? place.subAdministrativeArea!
+                    : place.administrativeArea?.isNotEmpty == true
+                        ? place.administrativeArea!
+                        : 'Sector Zone';
+            final detectedCountry = place.country?.isNotEmpty == true ? place.country! : 'Global';
+            city.value = detectedCity;
+            country.value = detectedCountry;
+          } else {
+            city.value = 'Sector Zone';
+            country.value = 'Mine Concession';
+          }
+        } catch (_) {
+          if (city.value == 'Locating...') city.value = 'Field Sector';
+          if (country.value == 'Detecting...') country.value = 'Concession';
+        }
       }
     } catch (e) {
       if (kDebugMode) {
         print('Error fetching real metadata: $e');
       }
+      if (city.value == 'Locating...') city.value = 'Field Sector';
+      if (country.value == 'Detecting...') country.value = 'Concession';
     }
   }
 
@@ -221,6 +252,8 @@ class LoggingController extends GetxController {
       'lat': latitude.value,
       'lon': longitude.value,
       'altitude': altitude.value,
+      'city': city.value,
+      'country': country.value,
       'timestamp': DateTime.now().toIso8601String(),
     };
 
@@ -228,11 +261,7 @@ class LoggingController extends GetxController {
 
     if (Get.isRegistered<SyncEngineController>()) {
       final syncEngine = Get.find<SyncEngineController>();
-      syncEngine.loadSyncQueue();
-      // Auto-Sync in background if connected
-      if (!syncEngine.isOfflineMode.value) {
-        syncEngine.forceBackgroundSync();
-      }
+      syncEngine.triggerLiveAutoSync();
     }
     if (Get.isRegistered<HomeController>()) {
       Get.find<HomeController>().loadRecentScans();

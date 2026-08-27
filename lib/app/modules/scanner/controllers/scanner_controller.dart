@@ -286,16 +286,13 @@ class ScannerController extends GetxController {
   Future<void> analyzePickedPhoto(String path) async {
     if (isScanning.value) return;
     HapticFeedback.mediumImpact();
-    isScanning.value = true;
 
     if (Get.isRegistered<TfliteClassifierService>()) {
       Get.find<TfliteClassifierService>().capturedPhotoPath.value = path;
     }
 
-    Timer(const Duration(milliseconds: 600), () {
-      isScanning.value = false;
-      Get.toNamed(Routes.PROCESSING);
-    });
+    // Immediately navigate to Processing Screen so the live camera viewfinder does not flash
+    Get.toNamed(Routes.PROCESSING);
   }
 
   /// Capture image from live camera feed and run analysis

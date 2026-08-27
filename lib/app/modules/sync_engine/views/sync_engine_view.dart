@@ -82,13 +82,13 @@ class SyncEngineView extends GetView<SyncEngineController> {
                     children: [
                       _buildSummaryCard(
                         label: 'PENDING',
-                        value: '${controller.pendingCount}',
+                        value: '${controller.pendingCount.value}',
                         color: const Color(0xFFFF9100),
                       ),
                       const SizedBox(width: AppDimensions.p8),
                       _buildSummaryCard(
                         label: 'QUEUED SIZE',
-                        value: controller.queuedSizeFormatted,
+                        value: controller.queuedSizeFormatted.value,
                         color: AppColors.ore,
                       ),
                       const SizedBox(width: AppDimensions.p8),
@@ -156,7 +156,7 @@ class SyncEngineView extends GetView<SyncEngineController> {
                     // Dynamic Sync / Up-to-date Button
                     Obx(() {
                       final syncing = controller.isSyncing.value;
-                      final hasPending = controller.pendingCount > 0;
+                      final hasPending = controller.pendingCount.value > 0;
                       final hasItems = controller.items.isNotEmpty;
 
                       Color bgColor;
@@ -232,7 +232,7 @@ class SyncEngineView extends GetView<SyncEngineController> {
                                     const SizedBox(width: 6),
                                     Text(
                                       hasPending
-                                          ? 'Force Background Sync (${controller.pendingCount})'
+                                          ? 'Force Background Sync (${controller.pendingCount.value})'
                                           : hasItems
                                               ? 'All Scans Synchronized ✓'
                                               : 'No Scans in Queue',

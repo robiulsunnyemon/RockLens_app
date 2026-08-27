@@ -20,6 +20,7 @@ app.*.map.json
 # Android Build Artifacts & Credentials
 # -----------------------------------------------------------------------------
 **/android/.gradle/
+**/android/build/
 **/android/captures/
 **/android/gradlew
 **/android/gradlew.bat

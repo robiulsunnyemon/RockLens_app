@@ -271,7 +271,7 @@ class LoggingView extends GetView<LoggingController> {
                         return Row(
                           children: [
                             SizedBox(
-                              width: 60,
+                              width: 50,
                               child: Text(
                                 item['label']!,
                                 style: AppTypography.monoFooter.copyWith(
@@ -281,14 +281,17 @@ class LoggingView extends GetView<LoggingController> {
                               ),
                             ),
                             Expanded(
-                              child: Text(
-                                item['value']!,
-                                style: AppTypography.hudTicker.copyWith(
-                                  color: AppColors.quartz,
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w600,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  item['value']!,
+                                  style: AppTypography.hudTicker.copyWith(
+                                    color: AppColors.quartz,
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],

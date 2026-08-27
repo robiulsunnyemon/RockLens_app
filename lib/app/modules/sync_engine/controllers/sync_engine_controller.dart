@@ -45,20 +45,27 @@ class SyncEngineController extends GetxController {
 
   final items = <SyncQueueItem>[].obs;
 
-  int get pendingCount => items.where((i) => i.status == 'pending').length;
+  // Explicit reactive observables so Obx widgets always rebuild when values change
+  final pendingCount = 0.obs;
+  final queuedSizeFormatted = '0.0 MB'.obs;
 
-  String get queuedSizeFormatted {
-    final pendingItems = items.where((i) => i.status == 'pending');
-    if (pendingItems.isEmpty) return '0.0 MB';
-    double totalMb = 0.0;
-    for (final item in pendingItems) {
-      final sizeNum = double.tryParse(item.size.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 3.5;
-      totalMb += sizeNum;
+  void _recalculateReactiveCounts() {
+    final pending = items.where((i) => i.status == 'pending').toList();
+    pendingCount.value = pending.length;
+    if (pending.isEmpty) {
+      queuedSizeFormatted.value = '0.0 MB';
+    } else {
+      double totalMb = 0.0;
+      for (final item in pending) {
+        final sizeNum = double.tryParse(item.size.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 3.5;
+        totalMb += sizeNum;
+      }
+      queuedSizeFormatted.value = '${totalMb.toStringAsFixed(1)} MB';
     }
-    return '${totalMb.toStringAsFixed(1)} MB';
   }
 
   Timer? _autoSyncHeartbeatTimer;
+  bool _isHeartbeatRunning = false;
 
   @override
   void onInit() {
@@ -74,34 +81,55 @@ class SyncEngineController extends GetxController {
     super.onClose();
   }
 
-  /// Real-time connectivity watcher: detects network recovery and auto-pushes offline queue
+  /// Trigger instant live auto-sync immediately (called on saveDiscovery, screen view, or nav)
+  Future<void> triggerLiveAutoSync() async {
+    loadSyncQueue();
+    if (isSyncing.value) return;
+    if (pendingCount.value > 0) {
+      // Try syncing directly — if it succeeds, backend is reachable; if not, mark offline
+      await forceBackgroundSync();
+    } else {
+      // No pending items — try fetching cloud specimens to verify connectivity
+      await _checkConnectivityOnly();
+    }
+  }
+
+  /// Light connectivity probe (no sync side effects)
+  Future<void> _checkConnectivityOnly() async {
+    try {
+      final res = await _apiClient.get(ApiEndpoints.health);
+      isOfflineMode.value = !res.isOk;
+    } catch (_) {
+      isOfflineMode.value = true;
+    }
+  }
+
+  /// Real-time sync monitor: attempts sync every 5 seconds if pending items exist
   void _startRealtimeSyncMonitoring() {
     _autoSyncHeartbeatTimer?.cancel();
-    // Run initial check immediately
-    _performHeartbeatSync();
+    // Run initial sync attempt immediately
+    triggerLiveAutoSync();
 
-    // Continuously monitor every 8 seconds in the background
-    _autoSyncHeartbeatTimer = Timer.periodic(const Duration(seconds: 8), (_) {
+    // Continuously attempt sync every 5 seconds
+    _autoSyncHeartbeatTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       _performHeartbeatSync();
     });
   }
 
   Future<void> _performHeartbeatSync() async {
-    if (isSyncing.value) return;
-
-    final wasOffline = isOfflineMode.value;
-    await checkBackendConnectivity();
-
-    // If online, check if we need to sync pending items or fetch new cloud records
-    if (!isOfflineMode.value) {
-      if (wasOffline || pendingCount > 0) {
-        if (kDebugMode) print('Online connection detected! Auto-syncing pending offline items...');
-        loadSyncQueue();
-        if (pendingCount > 0) {
-          await forceBackgroundSync();
-        }
+    // Guard: prevent concurrent heartbeat calls from stacking up
+    if (_isHeartbeatRunning || isSyncing.value) return;
+    _isHeartbeatRunning = true;
+    try {
+      loadSyncQueue();
+      if (pendingCount.value > 0) {
+        if (kDebugMode) print('[Heartbeat] ${pendingCount.value} pending — attempting auto-sync...');
+        await forceBackgroundSync();
+      } else {
+        await _checkConnectivityOnly();
       }
-      await fetchCloudSpecimens();
+    } finally {
+      _isHeartbeatRunning = false;
     }
   }
 
@@ -112,19 +140,15 @@ class SyncEngineController extends GetxController {
       if (res.isOk) {
         isOfflineMode.value = false;
       } else {
-        // Try fallback localhost if primary Wi-Fi IP is unreachable
         _apiClient.baseUrl = ApiEndpoints.fallbackLocalUrl;
         final res2 = await _apiClient.get(ApiEndpoints.health);
-        if (res2.isOk) {
-          isOfflineMode.value = false;
-        } else {
-          isOfflineMode.value = true;
-        }
+        isOfflineMode.value = !res2.isOk;
       }
     } catch (_) {
       isOfflineMode.value = true;
     }
   }
+
 
   /// Fetch synchronized cloud specimens from FastAPI backend and merge locally
   Future<void> fetchCloudSpecimens() async {
@@ -157,6 +181,8 @@ class SyncEngineController extends GetxController {
                 'lat': item['latitude'],
                 'lon': item['longitude'],
                 'altitude': item['altitude'],
+                'city': item['city'] ?? 'Field Sector',
+                'country': item['country'] ?? 'Mine Concession',
                 'timestamp': item['synced_at'] ?? DateTime.now().toIso8601String(),
               });
             }
@@ -243,6 +269,7 @@ class SyncEngineController extends GetxController {
 
     syncedTodayCount.value = syncedCount;
     items.assignAll(queue);
+    _recalculateReactiveCounts();
     _updateNavBadge();
   }
 
@@ -267,12 +294,6 @@ class SyncEngineController extends GetxController {
     }
     items.refresh();
     _updateNavBadge();
-    Get.snackbar(
-      AppStrings.snackSyncConfigTitle,
-      AppStrings.snackAutoSyncTriggeredMsg(items.length),
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 2),
-    );
   }
 
   /// Perform batch upload to FastAPI backend (/api/v1/sync/batch)
@@ -354,11 +375,6 @@ class SyncEngineController extends GetxController {
               avatarItem.status = 'pending';
               items.refresh();
             }
-            Get.snackbar(
-              AppStrings.snackAvatarErrorTitle,
-              res.message ?? AppStrings.snackAvatarUpdatedMsg,
-              snackPosition: SnackPosition.BOTTOM,
-            );
           }
         } catch (e) {
           if (avatarItem != null) {
@@ -391,12 +407,6 @@ class SyncEngineController extends GetxController {
     if (uploadTargets.isEmpty) {
       isSyncing.value = false;
       loadSyncQueue();
-      Get.snackbar(
-        AppStrings.snackAllItemsSyncedTitle,
-        AppStrings.snackAllItemsSyncedMsg,
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 2),
-      );
       return;
     }
 
@@ -486,6 +496,8 @@ class SyncEngineController extends GetxController {
           'lat': raw['lat'] ?? '',
           'lon': raw['lon'] ?? '',
           'altitude': raw['altitude'] ?? '',
+          'city': raw['city'] ?? '',
+          'country': raw['country'] ?? '',
           'timestamp': raw['timestamp'] ?? DateTime.now().toIso8601String(),
         };
       }).toList(),
@@ -517,33 +529,19 @@ class SyncEngineController extends GetxController {
           item.rawData['synced'] = true;
         }
         syncedTodayCount.value = items.where((i) => i.status == 'synced').length;
+        _recalculateReactiveCounts();
         isOfflineMode.value = false;
 
         // Also trigger Neural AI Model OTA background check
         if (Get.isRegistered<NeuralModelSyncService>()) {
           Get.find<NeuralModelSyncService>().checkAndSyncModel();
         }
-
-        Get.snackbar(
-          AppStrings.snackCloudSyncSuccessTitle,
-          AppStrings.snackCloudSyncSuccessMsg(uploadTargets.length),
-          snackPosition: SnackPosition.BOTTOM,
-          duration: const Duration(seconds: 4),
-        );
       } else {
         // Server returned error (e.g. 500 or 400)
-        final errorMsg = _apiClient.parseErrorMessage(response);
         for (final item in uploadTargets) {
           item.status = 'pending';
         }
         isOfflineMode.value = true;
-
-        Get.snackbar(
-          AppStrings.snackSyncNoticeTitle,
-          errorMsg,
-          snackPosition: SnackPosition.BOTTOM,
-          duration: const Duration(seconds: 4),
-        );
       }
     } catch (e) {
       if (kDebugMode) {
@@ -553,15 +551,8 @@ class SyncEngineController extends GetxController {
         item.status = 'pending';
       }
       isOfflineMode.value = true;
-
-      Get.snackbar(
-        AppStrings.snackOfflineModeActiveTitle,
-        AppStrings.snackOfflineModeActiveMsg,
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 4),
-      );
     } finally {
-      items.refresh();
+      loadSyncQueue(); // reads updated storage, calls items.assignAll + _recalculateReactiveCounts
       isSyncing.value = false;
       _updateNavBadge();
     }
@@ -569,7 +560,7 @@ class SyncEngineController extends GetxController {
 
   void _updateNavBadge() {
     if (Get.isRegistered<MainNavController>()) {
-      Get.find<MainNavController>().stagedCount.value = pendingCount;
+      Get.find<MainNavController>().stagedCount.value = pendingCount.value;
     }
   }
 }

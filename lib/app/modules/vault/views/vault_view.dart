@@ -15,8 +15,13 @@ class VaultView extends GetView<VaultController> {
     return Scaffold(
       backgroundColor: AppColors.litho,
       body: SafeArea(
-        child: Column(
-          children: [
+        child: RefreshIndicator(
+          onRefresh: controller.onRefresh,
+          color: AppColors.ore,
+          backgroundColor: AppColors.surface,
+          displacement: 20,
+          child: Column(
+            children: [
             // Top Bar
             Padding(
               padding: const EdgeInsets.symmetric(
@@ -217,30 +222,42 @@ class VaultView extends GetView<VaultController> {
                 final isCard = controller.isCardView.value;
 
                 if (specimens.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.search_off_rounded,
-                          size: 48,
-                          color: AppColors.muted,
-                        ),
-                        const SizedBox(height: AppDimensions.p12),
-                        Text(
-                          'No matching mineral specimens',
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.subtle,
+                  return LayoutBuilder(
+                    builder: (context, constraints) => SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: BouncingScrollPhysics(),
+                      ),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.search_off_rounded,
+                                size: 48,
+                                color: AppColors.muted,
+                              ),
+                              const SizedBox(height: AppDimensions.p12),
+                              Text(
+                                'No matching mineral specimens',
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: AppColors.subtle,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
+                      ),
                     ),
                   );
                 }
 
                 if (isCard) {
                   return GridView.builder(
-                    physics: const BouncingScrollPhysics(),
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: BouncingScrollPhysics(),
+                    ),
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppDimensions.p16,
                       vertical: AppDimensions.p8,
@@ -360,7 +377,9 @@ class VaultView extends GetView<VaultController> {
 
                 // List View
                 return ListView.separated(
-                  physics: const BouncingScrollPhysics(),
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics(),
+                  ),
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppDimensions.p16,
                     vertical: AppDimensions.p8,
@@ -536,6 +555,7 @@ class VaultView extends GetView<VaultController> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

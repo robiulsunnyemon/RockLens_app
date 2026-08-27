@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../data/services/storage_service.dart';
+import '../../sync_engine/controllers/sync_engine_controller.dart';
 
 class SpecimenItem {
   final String name;
@@ -69,6 +71,21 @@ class VaultController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    loadCatalogAndDiscoveries();
+    _fetchCloudIfAvailable();
+  }
+
+  Future<void> _fetchCloudIfAvailable() async {
+    if (Get.isRegistered<SyncEngineController>()) {
+      await Get.find<SyncEngineController>().fetchCloudSpecimens();
+    }
+  }
+
+  Future<void> onRefresh() async {
+    HapticFeedback.mediumImpact();
+    if (Get.isRegistered<SyncEngineController>()) {
+      await Get.find<SyncEngineController>().fetchCloudSpecimens();
+    }
     loadCatalogAndDiscoveries();
   }
 

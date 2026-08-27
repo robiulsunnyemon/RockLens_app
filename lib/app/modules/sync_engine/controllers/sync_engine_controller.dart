@@ -10,6 +10,7 @@ import '../../../data/services/api_client.dart';
 import '../../../data/services/storage_service.dart';
 import '../../../data/services/neural_model_sync_service.dart';
 import '../../home/controllers/home_controller.dart';
+import '../../gis_map/controllers/gis_map_controller.dart';
 import '../../main_nav/controllers/main_nav_controller.dart';
 import '../../profile/controllers/profile_controller.dart';
 import '../../vault/controllers/vault_controller.dart';
@@ -88,20 +89,8 @@ class SyncEngineController extends GetxController {
     if (pendingCount.value > 0) {
       // Try syncing directly — if it succeeds, backend is reachable; if not, mark offline
       await forceBackgroundSync();
-    } else {
-      // No pending items — try fetching cloud specimens to verify connectivity
-      await _checkConnectivityOnly();
     }
-  }
-
-  /// Light connectivity probe (no sync side effects)
-  Future<void> _checkConnectivityOnly() async {
-    try {
-      final res = await _apiClient.get(ApiEndpoints.health);
-      isOfflineMode.value = !res.isOk;
-    } catch (_) {
-      isOfflineMode.value = true;
-    }
+    await fetchCloudSpecimens();
   }
 
   /// Real-time sync monitor: attempts sync every 5 seconds if pending items exist
@@ -125,9 +114,8 @@ class SyncEngineController extends GetxController {
       if (pendingCount.value > 0) {
         if (kDebugMode) print('[Heartbeat] ${pendingCount.value} pending — attempting auto-sync...');
         await forceBackgroundSync();
-      } else {
-        await _checkConnectivityOnly();
       }
+      await fetchCloudSpecimens();
     } finally {
       _isHeartbeatRunning = false;
     }
@@ -149,12 +137,22 @@ class SyncEngineController extends GetxController {
     }
   }
 
+  String _formatDate(dynamic dateRaw) {
+    try {
+      final dt = DateTime.parse(dateRaw.toString());
+      final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
+    } catch (_) {
+      return 'Recent';
+    }
+  }
 
   /// Fetch synchronized cloud specimens from FastAPI backend and merge locally
   Future<void> fetchCloudSpecimens() async {
     try {
       final response = await _apiClient.get('${ApiEndpoints.apiV1}/specimens');
       if (response.isOk && response.body is List) {
+        isOfflineMode.value = false;
         final cloudItems = response.body as List;
         final localLogs = _storage.getDiscoveryLogs();
         final localTags = localLogs.map((l) => l['tag'] as String?).toSet();
@@ -165,22 +163,23 @@ class SyncEngineController extends GetxController {
             final tag = item['tag'] as String?;
             if (tag != null && !localTags.contains(tag)) {
               hasNew = true;
+              final rawDate = item['synced_at'] ?? item['created_at'];
               await _storage.saveDiscoveryLog({
                 'tag': tag,
                 'name': item['name'] ?? 'Specimen',
                 'formula': item['formula'] ?? 'Mineral',
                 'conf': (item['confidence'] as num?)?.toInt() ?? 90,
                 'grade': item['grade'] ?? 'Specimen',
-                'date': 'Cloud Synced',
+                'date': _formatDate(rawDate),
                 'synced': true,
                 'loc': item['location_name'] ?? 'Field Concession',
                 'notes': item['field_notes'] ?? '',
                 'photos': item['photos'] ?? [],
                 'hasVoiceNote': item['has_voice_note'] ?? false,
-                'voiceDuration': item['voice_duration'],
-                'lat': item['latitude'],
-                'lon': item['longitude'],
-                'altitude': item['altitude'],
+                'voiceDuration': item['voice_duration'] ?? '00:00',
+                'lat': item['latitude'] ?? '23.8127°N',
+                'lon': item['longitude'] ?? '90.4208°E',
+                'altitude': item['altitude'] ?? '-18m ASL',
                 'city': item['city'] ?? 'Field Sector',
                 'country': item['country'] ?? 'Mine Concession',
                 'timestamp': item['synced_at'] ?? DateTime.now().toIso8601String(),
@@ -196,6 +195,9 @@ class SyncEngineController extends GetxController {
           }
           if (Get.isRegistered<VaultController>()) {
             Get.find<VaultController>().loadCatalogAndDiscoveries();
+          }
+          if (Get.isRegistered<GisMapController>()) {
+            Get.find<GisMapController>().loadAllMapPins();
           }
           if (Get.isRegistered<ProfileController>()) {
             Get.find<ProfileController>().refreshDynamicStats();

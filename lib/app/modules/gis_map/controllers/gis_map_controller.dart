@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import '../../../data/services/storage_service.dart';
+import '../../sync_engine/controllers/sync_engine_controller.dart';
 
 enum MapLayerFilter { all, myScans, africanMines }
 
@@ -74,6 +75,9 @@ class GisMapController extends GetxController {
     super.onInit();
     _initDeviceGps();
     loadAllMapPins();
+    if (Get.isRegistered<SyncEngineController>()) {
+      Get.find<SyncEngineController>().fetchCloudSpecimens();
+    }
   }
 
   /// Initialize real device GPS location

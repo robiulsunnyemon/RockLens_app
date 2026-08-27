@@ -9,11 +9,11 @@ import '../../profile/controllers/profile_controller.dart';
 class MainNavBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<MainNavController>(() => MainNavController());
-    Get.lazyPut<HomeController>(() => HomeController());
-    Get.lazyPut<VaultController>(() => VaultController());
-    Get.lazyPut<GisMapController>(() => GisMapController());
-    Get.lazyPut<SyncEngineController>(() => SyncEngineController());
-    Get.lazyPut<ProfileController>(() => ProfileController());
+    Get.put<MainNavController>(MainNavController(), permanent: true);
+    Get.put<HomeController>(HomeController(), permanent: true);
+    Get.put<VaultController>(VaultController(), permanent: true);
+    Get.put<GisMapController>(GisMapController(), permanent: true);
+    Get.put<SyncEngineController>(SyncEngineController(), permanent: true);
+    Get.put<ProfileController>(ProfileController(), permanent: true);
   }
 }

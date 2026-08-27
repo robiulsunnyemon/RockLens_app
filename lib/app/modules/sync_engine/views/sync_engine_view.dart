@@ -13,12 +13,13 @@ class SyncEngineView extends GetView<SyncEngineController> {
     return Scaffold(
       backgroundColor: AppColors.litho,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppDimensions.p16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: AppDimensions.p10),
+        child: GetBuilder<SyncEngineController>(
+          builder: (controller) => Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppDimensions.p16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: AppDimensions.p10),
 
               // 1. Header with Offline/Online Status Badge
               Row(
@@ -404,8 +405,9 @@ class SyncEngineView extends GetView<SyncEngineController> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildSummaryCard({
     required String label,

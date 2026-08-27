@@ -63,6 +63,7 @@ class SyncEngineController extends GetxController {
       }
       queuedSizeFormatted.value = '${totalMb.toStringAsFixed(1)} MB';
     }
+    update();
   }
 
   Timer? _autoSyncHeartbeatTimer;
@@ -557,6 +558,7 @@ class SyncEngineController extends GetxController {
       loadSyncQueue(); // reads updated storage, calls items.assignAll + _recalculateReactiveCounts
       isSyncing.value = false;
       _updateNavBadge();
+      update();
     }
   }
 

@@ -1,8 +1,11 @@
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/services/storage_service.dart';
 import '../../../routes/app_pages.dart';
 import '../../main_nav/controllers/main_nav_controller.dart';
+import '../../profile/controllers/profile_controller.dart';
+import '../../sync_engine/controllers/sync_engine_controller.dart';
 
 class HomeController extends GetxController {
   final StorageService _storage = Get.find<StorageService>();
@@ -58,6 +61,23 @@ class HomeController extends GetxController {
     super.onInit();
     refreshUserData();
     loadRecentScans();
+  }
+
+  /// Pull-to-refresh handler for Home Screen
+  Future<void> onRefresh() async {
+    HapticFeedback.mediumImpact();
+    refreshUserData();
+    loadRecentScans();
+
+    if (Get.isRegistered<SyncEngineController>()) {
+      await Get.find<SyncEngineController>().triggerLiveAutoSync();
+    }
+    if (Get.isRegistered<ProfileController>()) {
+      await Get.find<ProfileController>().fetchLatestProfile();
+    }
+
+    // Smooth UI animation delay
+    await Future.delayed(const Duration(milliseconds: 500));
   }
 
   void refreshUserData() {

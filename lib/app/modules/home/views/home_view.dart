@@ -19,12 +19,17 @@ class HomeView extends GetView<HomeController> {
     return Scaffold(
       backgroundColor: AppColors.litho,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppDimensions.p16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: AppDimensions.p8),
+        child: RefreshIndicator(
+          onRefresh: controller.onRefresh,
+          color: AppColors.ore,
+          backgroundColor: AppColors.surface,
+          displacement: 20,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppDimensions.p16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: AppDimensions.p8),
 
               // 1. Top Header Row
               Row(
@@ -280,62 +285,70 @@ class HomeView extends GetView<HomeController> {
                   final scans = controller.recentScans;
 
                   if (scans.isEmpty) {
-                    return Center(
-                      child: SingleChildScrollView(
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 24,
-                            horizontal: 20,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.surface.withValues(alpha: 0.6),
-                            borderRadius: AppDimensions.radius16,
-                            border: Border.all(
-                              color: AppColors.surfaceBorder,
-                              width: 1,
-                            ),
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: AppColors.ore.withValues(alpha: 0.1),
-                                  border: Border.all(
-                                    color: AppColors.ore.withValues(alpha: 0.25),
-                                    width: 1,
+                    return LayoutBuilder(
+                      builder: (context, constraints) => SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(
+                          parent: BouncingScrollPhysics(),
+                        ),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                          child: Center(
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 24,
+                                horizontal: 20,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface.withValues(alpha: 0.6),
+                                borderRadius: AppDimensions.radius16,
+                                border: Border.all(
+                                  color: AppColors.surfaceBorder,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: AppColors.ore.withValues(alpha: 0.1),
+                                      border: Border.all(
+                                        color: AppColors.ore.withValues(alpha: 0.25),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.radar_rounded,
+                                      color: AppColors.ore,
+                                      size: 28,
+                                    ),
                                   ),
-                                ),
-                                child: const Icon(
-                                  Icons.radar_rounded,
-                                  color: AppColors.ore,
-                                  size: 28,
-                                ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'NO SPECIMEN DISCOVERIES RECORDED',
+                                    style: AppTypography.hudTicker.copyWith(
+                                      color: AppColors.quartz,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.8,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    'Your geological vault is currently empty. Tap "INITIATE SCAN" above to classify and log your first field discovery.',
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: AppColors.subtle,
+                                      fontSize: 11.5,
+                                      height: 1.4,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 12),
-                              Text(
-                                'NO SPECIMEN DISCOVERIES RECORDED',
-                                style: AppTypography.hudTicker.copyWith(
-                                  color: AppColors.quartz,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.8,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                'Your geological vault is currently empty. Tap "INITIATE SCAN" above to classify and log your first field discovery.',
-                                style: AppTypography.bodySmall.copyWith(
-                                  color: AppColors.subtle,
-                                  fontSize: 11.5,
-                                  height: 1.4,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
+                            ),
                           ),
                         ),
                       ),
@@ -343,7 +356,9 @@ class HomeView extends GetView<HomeController> {
                   }
 
                   return ListView.builder(
-                    physics: const BouncingScrollPhysics(),
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: BouncingScrollPhysics(),
+                    ),
                     padding: const EdgeInsets.only(bottom: AppDimensions.p16),
                     itemCount: scans.length,
                     itemBuilder: (context, idx) {
@@ -487,15 +502,16 @@ class HomeView extends GetView<HomeController> {
                       ),
                     );
                   },
-                  );
-                }),
-              ),
-            ],
-          ),
+                );
+              }),
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  ),
+);
+}
 
   Widget _buildStatCard({
     required String label,

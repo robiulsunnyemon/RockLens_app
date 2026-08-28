@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.otzar.app"
+    namespace = "com.khesedfavor.otzarapp"
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
@@ -15,7 +15,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.otzar.app"
+        applicationId = "com.khesedfavor.otzarapp"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

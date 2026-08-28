@@ -1,4 +1,4 @@
-package com.otzar.app
+package com.khesedfavor.otzarapp
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

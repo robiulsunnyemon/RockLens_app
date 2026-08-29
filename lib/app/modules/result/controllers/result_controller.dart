@@ -38,20 +38,39 @@ class ResultController extends GetxController {
     hasError.value = active.hasError;
     errorMessage.value = active.errorMessage ?? '';
     isLowConfidence.value = active.isLowConfidence;
-    executionMode.value = active.executionMode ?? 'Meta DINOv2 Neural Engine';
+    executionMode.value = active.executionMode ?? 'Mobile SOTA Neural Engine';
 
-    mineralName.value = active.mineralName;
-    chemicalFormula.value = active.chemicalFormula;
-    mineralGroup.value = active.mineralGroup;
-    confidencePercentage.value = active.confidencePercentage;
-    rawOreEstimate.value = active.rawOreEstimate;
-    specimenEstimate.value = active.specimenEstimate;
-    properties.assignAll(active.properties);
-    alternativeCandidates.assignAll(active.alternativeCandidates);
-    africanRegions.assignAll(active.africanRegions);
-    rarityTier.value = active.rarityTier;
-    economicValue.value = active.economicValue;
-    description.value = active.description;
+    if (active.isLowConfidence) {
+      mineralName.value = 'Unrecognized Object';
+      chemicalFormula.value = 'Non-Mineral Surface Detected';
+      mineralGroup.value = 'UNIDENTIFIED SPECIMEN';
+      confidencePercentage.value = active.confidencePercentage;
+      rawOreEstimate.value = 'N/A';
+      specimenEstimate.value = 'N/A';
+      rarityTier.value = 'N/A';
+      economicValue.value = 'No Mineral Value';
+      description.value = 'The scanned surface does not match known geological crystal textures. Please point camera directly at a real mineral or rock specimen.';
+      properties.assignAll({
+        'Status': 'Low Confidence (<35%)',
+        'Crystalline Form': 'Non-Mineral',
+        'Recommendation': 'Scan real rock specimen',
+      });
+      alternativeCandidates.clear();
+      africanRegions.clear();
+    } else {
+      mineralName.value = active.mineralName;
+      chemicalFormula.value = active.chemicalFormula;
+      mineralGroup.value = active.mineralGroup;
+      confidencePercentage.value = active.confidencePercentage;
+      rawOreEstimate.value = active.rawOreEstimate;
+      specimenEstimate.value = active.specimenEstimate;
+      properties.assignAll(active.properties);
+      alternativeCandidates.assignAll(active.alternativeCandidates);
+      africanRegions.assignAll(active.africanRegions);
+      rarityTier.value = active.rarityTier;
+      economicValue.value = active.economicValue;
+      description.value = active.description;
+    }
   }
 
   void updateConfidenceFromFieldTest(double newConfidence) {

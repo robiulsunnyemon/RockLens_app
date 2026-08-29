@@ -441,33 +441,38 @@ class ResultView extends GetView<ResultController> {
                 )),
             const SizedBox(height: AppDimensions.p24),
 
-            // Action Buttons
             // 1. Refine with Field Test
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton.icon(
-                onPressed: controller.goToFieldTest,
-                icon: const Icon(Icons.tune_rounded, size: 18, color: AppColors.cyan),
-                label: Text(
-                  'Refine with Field Test (Recommended) +10%',
-                  style: AppTypography.buttonText.copyWith(
-                    color: AppColors.cyan,
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
+            Obx(() {
+              final isDisabled = controller.isLowConfidence.value || controller.hasError.value;
+              if (isDisabled) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(bottom: AppDimensions.p10),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    onPressed: controller.goToFieldTest,
+                    icon: const Icon(Icons.tune_rounded, size: 18, color: AppColors.cyan),
+                    label: Text(
+                      'Refine with Field Test (Recommended) +10%',
+                      style: AppTypography.buttonText.copyWith(
+                        color: AppColors.cyan,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.cyan.withValues(alpha: 0.1),
+                      side: BorderSide(color: AppColors.cyan.withValues(alpha: 0.4), width: 1),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: AppDimensions.radius16,
+                      ),
+                      elevation: 0,
+                    ),
                   ),
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.cyan.withValues(alpha: 0.1),
-                  side: BorderSide(color: AppColors.cyan.withValues(alpha: 0.4), width: 1),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AppDimensions.radius16,
-                  ),
-                  elevation: 0,
-                ),
-              ),
-            ),
-            const SizedBox(height: AppDimensions.p10),
+              );
+            }),
 
             // 2. Confirm & Log and Discard
             Row(
@@ -475,25 +480,30 @@ class ResultView extends GetView<ResultController> {
                 Expanded(
                   child: SizedBox(
                     height: 48,
-                    child: ElevatedButton(
-                      onPressed: controller.confirmAndLog,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.ore,
-                        foregroundColor: AppColors.litho,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: AppDimensions.radius16,
+                    child: Obx(() {
+                      final isDisabled = controller.isLowConfidence.value || controller.hasError.value;
+                      return ElevatedButton(
+                        onPressed: isDisabled ? null : controller.confirmAndLog,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.ore,
+                          foregroundColor: AppColors.litho,
+                          disabledBackgroundColor: AppColors.surface2,
+                          disabledForegroundColor: AppColors.subtle,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: AppDimensions.radius16,
+                          ),
+                          elevation: 0,
                         ),
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        'Confirm & Log',
-                        style: AppTypography.buttonText.copyWith(
-                          color: AppColors.litho,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
+                        child: Text(
+                          isDisabled ? 'Cannot Log (Unrecognized)' : 'Confirm & Log',
+                          style: AppTypography.buttonText.copyWith(
+                            color: isDisabled ? AppColors.subtle : AppColors.litho,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    }),
                   ),
                 ),
                 const SizedBox(width: AppDimensions.p10),

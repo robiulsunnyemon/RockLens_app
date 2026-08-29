@@ -105,7 +105,7 @@ class TfliteClassifierService extends GetxService {
         if (customModelFile.existsSync()) {
           _interpreter = tfl.Interpreter.fromFile(customModelFile, options: options);
           isModelLoaded.value = true;
-          if (kDebugMode) print('DINOv2 Model loaded from custom OTA file.');
+          if (kDebugMode) print('🚀 DINOv2 Model loaded from custom OTA file.');
           return;
         }
       } catch (_) {}
@@ -113,10 +113,14 @@ class TfliteClassifierService extends GetxService {
       // 2. Load from bundled asset
       _interpreter = await tfl.Interpreter.fromAsset('assets/model/dinov2_minerals.tflite', options: options);
       isModelLoaded.value = true;
-      if (kDebugMode) print('DINOv2 Model loaded successfully from assets/model/dinov2_minerals.tflite');
-    } catch (e) {
       if (kDebugMode) {
-        print('TFLite interpreter load exception (Graceful fallback active): $e');
+        final inTensor = _interpreter!.getInputTensor(0);
+        final outTensor = _interpreter!.getOutputTensor(0);
+        print('🚀 DINOv2 Model loaded! Input Shape: ${inTensor.shape} (Type: ${inTensor.type}), Output Shape: ${outTensor.shape}');
+      }
+    } catch (e, stack) {
+      if (kDebugMode) {
+        print('⚠️ TFLite interpreter load exception: $e\n$stack');
       }
       isModelLoaded.value = false;
     }
@@ -178,6 +182,7 @@ class TfliteClassifierService extends GetxService {
           .map((e) => e.trim().toLowerCase())
           .where((e) => e.isNotEmpty)
           .toList();
+      if (kDebugMode) print('📋 Loaded ${_labels.length} mineral labels.');
     } catch (_) {
       _labels = [
         'malachite',
@@ -222,8 +227,11 @@ class TfliteClassifierService extends GetxService {
         final file = File(photoPath);
         if (file.existsSync()) {
           rawBytes = await file.readAsBytes();
+          if (kDebugMode) print('📸 Read ${rawBytes.lengthInBytes} bytes from captured photo: $photoPath');
         }
-      } catch (_) {}
+      } catch (e) {
+        if (kDebugMode) print('Error reading photo bytes: $e');
+      }
     }
 
     if (rawBytes != null && _interpreter != null && _labels.isNotEmpty) {
@@ -233,14 +241,14 @@ class TfliteClassifierService extends GetxService {
           activeResult.value = result;
           return result;
         }
-      } catch (e) {
+      } catch (e, stack) {
         if (kDebugMode) {
-          print('Inference execution error: $e');
+          print('❌ Inference execution error: $e\n$stack');
         }
       }
     }
 
-    // 2. Dynamic fallback / simulation pipeline if running in emulator without camera
+    // 2. If no photo or running on desktop emulator, create a fallback
     await Future.delayed(const Duration(milliseconds: 300));
 
     final targetLabel = (selectedMineral ?? (_labels.isNotEmpty ? _labels[0] : 'malachite')).toLowerCase();
@@ -277,59 +285,89 @@ class TfliteClassifierService extends GetxService {
     return result;
   }
 
-  /// Run real DINOv2 448x448 FP16 on-device classification
+  /// Run real DINOv2 448x448 FP16 on-device classification using fast typed buffers
   Future<MineralClassificationResult?> _runRealDinov2Inference(Uint8List bytes) async {
     try {
       final image = img.decodeImage(bytes);
-      if (image == null) return null;
+      if (image == null) {
+        if (kDebugMode) print('⚠️ Could not decode image from bytes.');
+        return null;
+      }
 
-      // 1. Resize to 448x448 matching DINOv2 model input
-      final resized = img.copyResize(image, width: 448, height: 448);
+      final inputTensor = _interpreter!.getInputTensor(0);
+      final inputShape = inputTensor.shape; // e.g. [1, 3, 448, 448] or [1, 448, 448, 3]
+      final isNCHW = inputShape.length == 4 && inputShape[1] == 3;
+      final int h = isNCHW ? inputShape[2] : inputShape[1];
+      final int w = isNCHW ? inputShape[3] : inputShape[2];
+
+      // 1. High quality resize to model dimensions (e.g. 448x448)
+      final resized = img.copyResize(image, width: w, height: h);
 
       // 2. Normalization: Mean [0.485, 0.456, 0.406] and Std [0.229, 0.224, 0.225]
       const mean = [0.485, 0.456, 0.406];
       const std = [0.229, 0.224, 0.225];
 
-      var input = List.generate(
-        1,
-        (_) => List.generate(
-          448,
-          (y) => List.generate(
-            448,
-            (x) {
-              final pixel = resized.getPixel(x, y);
-              final r = (pixel.r / 255.0 - mean[0]) / std[0];
-              final g = (pixel.g / 255.0 - mean[1]) / std[1];
-              final b = (pixel.b / 255.0 - mean[2]) / std[2];
-              return [r, g, b];
-            },
-          ),
-        ),
-      );
+      final inputBuffer = Float32List(1 * 3 * h * w);
 
-      // 3. Output logits tensor [1, num_classes]
-      final output = List.generate(1, (_) => List<double>.filled(_labels.length, 0.0));
+      if (isNCHW) {
+        // Planar RGB: [1, 3, H, W] (Standard PyTorch DINOv2 layout)
+        final int channelSize = h * w;
+        for (int y = 0; y < h; y++) {
+          for (int x = 0; x < w; x++) {
+            final pixel = resized.getPixel(x, y);
+            final int spatialIdx = y * w + x;
+            inputBuffer[0 * channelSize + spatialIdx] = (pixel.r / 255.0 - mean[0]) / std[0];
+            inputBuffer[1 * channelSize + spatialIdx] = (pixel.g / 255.0 - mean[1]) / std[1];
+            inputBuffer[2 * channelSize + spatialIdx] = (pixel.b / 255.0 - mean[2]) / std[2];
+          }
+        }
+      } else {
+        // Interleaved RGB: [1, H, W, 3] (Standard TF layout)
+        int pixelIdx = 0;
+        for (int y = 0; y < h; y++) {
+          for (int x = 0; x < w; x++) {
+            final pixel = resized.getPixel(x, y);
+            inputBuffer[pixelIdx++] = (pixel.r / 255.0 - mean[0]) / std[0];
+            inputBuffer[pixelIdx++] = (pixel.g / 255.0 - mean[1]) / std[1];
+            inputBuffer[pixelIdx++] = (pixel.b / 255.0 - mean[2]) / std[2];
+          }
+        }
+      }
 
+      // 3. Prepare Typed Multidimensional Views for Interpreter
+      final outputTensor = _interpreter!.getOutputTensor(0);
+      final outputShape = outputTensor.shape; // e.g. [1, 112]
+      final numClasses = outputShape.last;
+      final outputBuffer = Float32List(numClasses);
+
+      final input = inputBuffer.reshape(inputShape);
+      final output = outputBuffer.reshape(outputShape);
+
+      // 4. Run real TFLite Neural Inference
       _interpreter!.run(input, output);
 
-      final logits = output[0];
+      final List<double> logits = outputBuffer.toList();
       final probs = _softmax(logits);
 
-      // 4. Sort classes by predicted probability
+      // 5. Sort classes by predicted probability
       final List<MapEntry<int, double>> indexedProbs = [];
       for (int i = 0; i < probs.length; i++) {
         indexedProbs.add(MapEntry(i, probs[i]));
       }
       indexedProbs.sort((a, b) => b.value.compareTo(a.value));
 
-      // 5. Extract Top-1 Primary Prediction
+      // 6. Extract Top-1 Primary Prediction
       final top1Entry = indexedProbs.first;
       final top1Idx = top1Entry.key;
       final top1Score = (top1Entry.value * 100).clamp(1.0, 99.9);
       final top1Label = top1Idx < _labels.length ? _labels[top1Idx] : 'specimen';
       final primarySpecimen = getSpecimenByLabel(top1Label);
 
-      // 6. Extract Top-2 to Top-5 Alternative Candidates
+      if (kDebugMode) {
+        print('🎯 Top-1 Prediction: $top1Label ($top1Score%), Raw Logit: ${logits[top1Idx]}');
+      }
+
+      // 7. Extract Top-2 to Top-5 Alternative Candidates
       final colors = ['#00E5FF', '#00C853', '#D4AF37', '#FF9800'];
       final List<Map<String, dynamic>> alternatives = [];
       for (int i = 1; i < math.min(5, indexedProbs.length); i++) {
@@ -353,9 +391,9 @@ class TfliteClassifierService extends GetxService {
         confidencePercentage: double.parse(top1Score.toStringAsFixed(1)),
         alternativeCandidates: alternatives,
       );
-    } catch (e) {
+    } catch (e, stack) {
       if (kDebugMode) {
-        print('Real DINOv2 inference error: $e');
+        print('❌ Real DINOv2 inference error: $e\n$stack');
       }
       return null;
     }

@@ -54,11 +54,13 @@ class ResultView extends GetView<ResultController> {
                   children: [
                     const Row(
                       children: [
-                        Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 22),
+                        Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 20),
                         SizedBox(width: 8),
-                        Text(
-                          'DINOv2 INFERENCE EXECUTION FAILED',
-                          style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.8),
+                        Expanded(
+                          child: Text(
+                            'DINOv2 INFERENCE EXECUTION FAILED',
+                            style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 0.6),
+                          ),
                         ),
                       ],
                     ),

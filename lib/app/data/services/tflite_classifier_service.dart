@@ -353,19 +353,20 @@ class TfliteClassifierService extends GetxService {
       }
     }
 
-    // 2. Prepare Typed Multidimensional Views for Interpreter
+    // 3. Prepare Input & Output Structures for Interpreter
+    final input = inputBuffer.reshape(inputShape);
+
     final outputTensor = _interpreter!.getOutputTensor(0);
     final outputShape = outputTensor.shape; // e.g. [1, 112]
     final numClasses = outputShape.last;
-    final outputBuffer = Float32List(numClasses);
 
-    final input = inputBuffer.reshape(inputShape);
-    final output = outputBuffer.reshape(outputShape);
+    // Use standard 2D Dart List for output matching [1, num_classes]
+    final output = List.generate(1, (_) => List<double>.filled(numClasses, 0.0));
 
-    // 3. Run real TFLite Neural Inference (takes only ~15-20ms)
+    // 4. Run real TFLite Neural Inference (takes only ~15-20ms)
     _interpreter!.run(input, output);
 
-    final List<double> rawOutput = outputBuffer.toList();
+    final List<double> rawOutput = List<double>.from(output[0]);
 
     // Check if model already outputs softmax or raw logits
     List<double> probs;

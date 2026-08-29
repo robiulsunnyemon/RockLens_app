@@ -38,6 +38,90 @@ class ResultView extends GetView<ResultController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Explicit Neural Inference Error Banner
+            Obx(() {
+              if (!controller.hasError.value) return const SizedBox.shrink();
+              return Container(
+                margin: const EdgeInsets.only(bottom: AppDimensions.p16),
+                padding: const EdgeInsets.all(AppDimensions.p16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF331111),
+                  borderRadius: AppDimensions.radius16,
+                  border: Border.all(color: Colors.redAccent, width: 1.2),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 22),
+                        SizedBox(width: 8),
+                        Text(
+                          'DINOv2 INFERENCE EXECUTION FAILED',
+                          style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.8),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      controller.errorMessage.value,
+                      style: const TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        onPressed: controller.discardAndScanAgain,
+                        icon: const Icon(Icons.refresh_rounded, size: 18),
+                        label: const Text('RE-SCAN SPECIMEN', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+
+            // Low Confidence / Out-Of-Distribution Warning Banner
+            Obx(() {
+              if (controller.hasError.value || !controller.isLowConfidence.value) return const SizedBox.shrink();
+              return Container(
+                margin: const EdgeInsets.only(bottom: AppDimensions.p16),
+                padding: const EdgeInsets.all(AppDimensions.p14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF332611),
+                  borderRadius: AppDimensions.radius16,
+                  border: Border.all(color: Colors.amberAccent, width: 1.2),
+                ),
+                child: const Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.warning_amber_rounded, color: Colors.amberAccent, size: 22),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'LOW CONFIDENCE / UNKNOWN OBJECT (<35%)',
+                            style: TextStyle(color: Colors.amberAccent, fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 0.6),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'The scanned surface does not strongly match known mineral crystalline textures (e.g. keyboard, household item, or poor lighting). Showing closest match.',
+                            style: TextStyle(color: Colors.white70, fontSize: 11),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
             // Hero ID Card with Radial Confidence Gauge
             Container(
               padding: const EdgeInsets.all(AppDimensions.p16),

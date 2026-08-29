@@ -6,18 +6,23 @@ import '../../../routes/app_pages.dart';
 class ResultController extends GetxController {
   final TfliteClassifierService _classifier = Get.find<TfliteClassifierService>();
 
-  final mineralName = 'Malachite'.obs;
-  final chemicalFormula = 'Cu₂CO₃(OH)₂'.obs;
-  final mineralGroup = 'CARBONATES · CU-BEARING'.obs;
-  final confidencePercentage = 86.4.obs;
-  final rawOreEstimate = '\$110 / ton'.obs;
-  final specimenEstimate = '\$45 / kg'.obs;
+  final mineralName = ''.obs;
+  final chemicalFormula = ''.obs;
+  final mineralGroup = ''.obs;
+  final confidencePercentage = 0.0.obs;
+  final rawOreEstimate = ''.obs;
+  final specimenEstimate = ''.obs;
   final properties = <String, String>{}.obs;
   final alternativeCandidates = <Map<String, dynamic>>[].obs;
   final africanRegions = <String>[].obs;
   final rarityTier = 'Common'.obs;
   final economicValue = 'Standard'.obs;
   final description = ''.obs;
+  final isLowConfidence = false.obs;
+  final hasError = false.obs;
+  final errorMessage = ''.obs;
+  final executionMode = ''.obs;
+
   RxnString get capturedPhotoPath => _classifier.capturedPhotoPath;
 
   @override
@@ -27,9 +32,13 @@ class ResultController extends GetxController {
   }
 
   Future<void> _loadResult() async {
-    // If activeResult is already set by ProcessingController, use it
     MineralClassificationResult? active = _classifier.activeResult.value;
-    active ??= await _classifier.classifySpecimen(selectedMineral: 'malachite');
+    active ??= await _classifier.classifySpecimen();
+
+    hasError.value = active.hasError;
+    errorMessage.value = active.errorMessage ?? '';
+    isLowConfidence.value = active.isLowConfidence;
+    executionMode.value = active.executionMode ?? 'Meta DINOv2 Neural Engine';
 
     mineralName.value = active.mineralName;
     chemicalFormula.value = active.chemicalFormula;

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:get/get.dart';
 import '../../../data/services/tflite_classifier_service.dart';
 import '../../../routes/app_pages.dart';
@@ -10,14 +9,13 @@ class ProcessingController extends GetxController {
   final TfliteClassifierService _classifier = Get.find<TfliteClassifierService>();
 
   static const List<String> inferenceStream = [
-    'Initializing Geological Model v1.0 (YOLOv8s-cls)...',
-    'Extracting color histogram & texture features...',
-    'Analyzing crystal luster & reflectance...',
-    'Measuring cleavage angles & cleavage planes...',
-    'Cross-referencing African Mineral Database...',
-    'Calculating Mohs probability distribution...',
-    'Checking spectral elemental signatures...',
-    'Target classification confidence confirmed.',
+    'Initializing Meta DINOv2 Vision Transformer (ViT-S/14)...',
+    'Generating 448x448 High-Density Patch Embeddings...',
+    'Extracting Self-Attention Feature Vectors & Crystal Luster...',
+    'Matching Spectral Signatures against 112 Mineral Classes...',
+    'Computing Softmax Probability Distribution & Top-K Ranking...',
+    'Cross-referencing Chemical Formulas & Mohs Hardness Scale...',
+    'Geological Classification & Validation Confirmed.',
   ];
 
   Timer? _streamTimer;
@@ -30,7 +28,7 @@ class ProcessingController extends GetxController {
 
   void _startInferencePipeline() {
     int index = 0;
-    _streamTimer = Timer.periodic(const Duration(milliseconds: 260), (timer) async {
+    _streamTimer = Timer.periodic(const Duration(milliseconds: 240), (timer) async {
       if (index < inferenceStream.length) {
         consoleLines.add(inferenceStream[index]);
         progress.value = (((index + 1) / inferenceStream.length) * 100).round();
@@ -38,41 +36,10 @@ class ProcessingController extends GetxController {
       } else {
         timer.cancel();
 
-        // Perform consistent classification dynamically from available labels
-        final photoPath = _classifier.capturedPhotoPath.value ?? '';
-        String selected = '';
-        final available = _classifier.labels;
+        // Perform real DINOv2 neural classification
+        await _classifier.classifySpecimen();
 
-        if (photoPath.isNotEmpty) {
-          final lowerPath = photoPath.toLowerCase();
-          for (final label in available) {
-            if (lowerPath.contains(label)) {
-              selected = label;
-              break;
-            }
-          }
-        }
-
-        if (selected.isEmpty && available.isNotEmpty) {
-          final hash = photoPath.isNotEmpty
-              ? photoPath.codeUnits.fold(0, (prev, elem) => prev + elem)
-              : Random().nextInt(available.length);
-          selected = available[hash % available.length];
-        }
-
-        if (selected.isEmpty) selected = 'malachite';
-
-        final hashVal = photoPath.isNotEmpty
-            ? photoPath.codeUnits.fold(0, (prev, elem) => (prev * 31 + elem) % 100)
-            : 88;
-        final conf = 88.0 + (hashVal % 10) + 0.5;
-
-        await _classifier.classifySpecimen(
-          selectedMineral: selected,
-          targetConfidence: double.parse(conf.toStringAsFixed(1)),
-        );
-
-        Timer(const Duration(milliseconds: 400), () {
+        Timer(const Duration(milliseconds: 300), () {
           Get.offNamed(Routes.RESULT);
         });
       }

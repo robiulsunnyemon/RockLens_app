@@ -68,5 +68,17 @@
 	</array>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Otzar App uses Apple Face ID to securely authenticate the field exploration geologist.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Otzar App requires camera access to scan and identify mineral specimens in the field.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Otzar App requires photo library access to attach specimen gallery photos.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Otzar App requires microphone access to record field voice notes for mineral discoveries.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Otzar App requires GPS location access to record precise mineral deposit coordinates.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Otzar App requires GPS location access to record field discovery telemetry on GIS maps.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

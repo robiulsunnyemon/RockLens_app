@@ -178,11 +178,11 @@ class SyncEngineController extends GetxController {
                 'photos': item['photos'] ?? [],
                 'hasVoiceNote': item['has_voice_note'] ?? false,
                 'voiceDuration': item['voice_duration'] ?? '00:00',
-                'lat': item['latitude'] ?? '23.8127°N',
-                'lon': item['longitude'] ?? '90.4208°E',
-                'altitude': item['altitude'] ?? '-18m ASL',
-                'city': item['city'] ?? 'Field Sector',
-                'country': item['country'] ?? 'Mine Concession',
+                'lat': item['latitude'] ?? '',
+                'lon': item['longitude'] ?? '',
+                'altitude': item['altitude'] ?? '',
+                'city': item['city'] ?? '',
+                'country': item['country'] ?? '',
                 'timestamp': item['synced_at'] ?? DateTime.now().toIso8601String(),
               });
             }

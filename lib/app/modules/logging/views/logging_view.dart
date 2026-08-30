@@ -226,29 +226,46 @@ class LoggingView extends GetView<LoggingController> {
                           letterSpacing: 0.8,
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppColors.emerald.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: AppColors.emerald.withValues(alpha: 0.4), width: 1),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.gps_fixed_rounded, color: AppColors.emerald, size: 10),
-                            const SizedBox(width: 3),
-                            Text(
-                              'GPS ACTIVE',
-                              style: AppTypography.hudTicker.copyWith(
-                                color: AppColors.emerald,
-                                fontSize: 7.5,
-                                fontWeight: FontWeight.bold,
+                      Obx(() {
+                        final isReady = controller.isLocationReady;
+                        return GestureDetector(
+                          onTap: controller.retryFetchLocation,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: isReady
+                                  ? AppColors.emerald.withValues(alpha: 0.15)
+                                  : AppColors.amber.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: isReady
+                                    ? AppColors.emerald.withValues(alpha: 0.4)
+                                    : AppColors.amber.withValues(alpha: 0.4),
+                                width: 1,
                               ),
                             ),
-                          ],
-                        ),
-                      ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  isReady ? Icons.gps_fixed_rounded : Icons.gps_not_fixed_rounded,
+                                  color: isReady ? AppColors.emerald : AppColors.amber,
+                                  size: 10,
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  isReady ? 'GPS FIXED' : 'ACQUIRING GPS',
+                                  style: AppTypography.hudTicker.copyWith(
+                                    color: isReady ? AppColors.emerald : AppColors.amber,
+                                    fontSize: 7.5,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }),
                     ],
                   ),
                   const SizedBox(height: AppDimensions.p12),
@@ -543,30 +560,54 @@ class LoggingView extends GetView<LoggingController> {
             const SizedBox(height: AppDimensions.p24),
 
             // 6. Save Discovery Action Button
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton.icon(
-                onPressed: controller.saveDiscovery,
-                icon: const Icon(Icons.bookmark_added_rounded, size: 18, color: AppColors.litho),
-                label: Text(
-                  'Save Discovery & Pin to Map',
-                  style: AppTypography.buttonText.copyWith(
-                    color: AppColors.litho,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
+            Obx(() {
+              final isReady = controller.isLocationReady;
+              final latVal = controller.latitude.value;
+              String buttonText = 'Save Discovery & Pin to Map';
+              if (!isReady) {
+                if (latVal.contains('Denied')) {
+                  buttonText = 'Location Permission Denied';
+                } else if (latVal.contains('Unavailable')) {
+                  buttonText = 'GPS Telemetry Unavailable';
+                } else {
+                  buttonText = 'Acquiring GPS Telemetry...';
+                }
+              }
+
+              return SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton.icon(
+                  onPressed: isReady ? controller.saveDiscovery : null,
+                  icon: Icon(
+                    isReady ? Icons.bookmark_added_rounded : Icons.location_searching_rounded,
+                    size: 18,
+                    color: isReady ? AppColors.litho : AppColors.muted,
+                  ),
+                  label: Text(
+                    buttonText,
+                    style: AppTypography.buttonText.copyWith(
+                      color: isReady ? AppColors.litho : AppColors.muted,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isReady ? AppColors.ore : AppColors.surface,
+                    disabledBackgroundColor: AppColors.surface,
+                    foregroundColor: isReady ? AppColors.litho : AppColors.muted,
+                    disabledForegroundColor: AppColors.muted,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: AppDimensions.radius16,
+                      side: isReady
+                          ? BorderSide.none
+                          : const BorderSide(color: AppColors.surfaceBorder, width: 1),
+                    ),
+                    elevation: 0,
                   ),
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.ore,
-                  foregroundColor: AppColors.litho,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AppDimensions.radius16,
-                  ),
-                  elevation: 0,
-                ),
-              ),
-            ),
+              );
+            }),
             const SizedBox(height: AppDimensions.p20),
           ],
         ),

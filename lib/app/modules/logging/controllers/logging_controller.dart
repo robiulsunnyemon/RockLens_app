@@ -75,6 +75,26 @@ class LoggingController extends GetxController {
         {'label': 'TEMP', 'value': tempStr.value},
       ];
 
+  bool get isLocationReady {
+    final lat = latitude.value.trim();
+    final lon = longitude.value.trim();
+    if (lat.isEmpty || lon.isEmpty) return false;
+    if (lat == 'Acquiring...' || lon == 'Acquiring...') return false;
+    if (lat.contains('Acquiring') || lon.contains('Acquiring')) return false;
+    if (lat.contains('Calibrating') || lon.contains('Calibrating')) return false;
+    if (lat.contains('Denied') || lon.contains('Denied')) return false;
+    if (lat.contains('Unavailable') || lon.contains('Unavailable')) return false;
+    return true;
+  }
+
+  void retryFetchLocation() {
+    latitude.value = 'Acquiring...';
+    longitude.value = 'Acquiring...';
+    city.value = 'Locating...';
+    country.value = 'Detecting...';
+    _fetchRealMetadata();
+  }
+
   String get formattedDuration {
     final mins = (recordingDuration.value ~/ 60).toString().padLeft(2, '0');
     final secs = (recordingDuration.value % 60).toString().padLeft(2, '0');
@@ -115,16 +135,6 @@ class LoggingController extends GetxController {
     timestampStr.value = '$hour:$min:$sec UTC';
   }
 
-  static (String, String) _fallbackCityCountry(double lat, double lon) {
-    if (lat >= 20.0 && lat <= 27.0 && lon >= 88.0 && lon <= 93.0) {
-      return ('Dhaka', 'Bangladesh');
-    }
-    if (lat >= -20.0 && lat <= 0.0 && lon >= 20.0 && lon <= 35.0) {
-      return ('Copperbelt', 'Zambia');
-    }
-    return ('Dhaka', 'Bangladesh');
-  }
-
   /// Read real device GPS coordinates, altitude, and accuracy
   Future<void> _fetchRealMetadata() async {
     try {
@@ -149,6 +159,8 @@ class LoggingController extends GetxController {
 
         if (pos.altitude != 0.0) {
           altitude.value = '${pos.altitude.round()}m ASL';
+        } else {
+          altitude.value = 'N/A';
         }
         gpsError.value = '±${pos.accuracy.toStringAsFixed(1)}m';
 
@@ -163,27 +175,32 @@ class LoggingController extends GetxController {
                     ? place.subAdministrativeArea!
                     : place.administrativeArea?.isNotEmpty == true
                         ? place.administrativeArea!
-                        : 'Dhaka';
-            final detectedCountry = place.country?.isNotEmpty == true ? place.country! : 'Bangladesh';
+                        : '';
+            final detectedCountry = place.country?.isNotEmpty == true ? place.country! : '';
             city.value = detectedCity;
             country.value = detectedCountry;
           } else {
-            final (c, cnt) = _fallbackCityCountry(pos.latitude, pos.longitude);
-            city.value = c;
-            country.value = cnt;
+            city.value = '';
+            country.value = '';
           }
         } catch (_) {
-          final (c, cnt) = _fallbackCityCountry(pos.latitude, pos.longitude);
-          city.value = c;
-          country.value = cnt;
+          city.value = '';
+          country.value = '';
         }
+      } else {
+        latitude.value = 'Permission Denied';
+        longitude.value = 'Permission Denied';
+        city.value = '';
+        country.value = '';
       }
     } catch (e) {
       if (kDebugMode) {
         print('Error fetching real metadata: $e');
       }
-      city.value = 'Dhaka';
-      country.value = 'Bangladesh';
+      latitude.value = 'GPS Unavailable';
+      longitude.value = 'GPS Unavailable';
+      city.value = '';
+      country.value = '';
     }
   }
 
@@ -246,15 +263,26 @@ class LoggingController extends GetxController {
 
   /// Persist complete real discovery record to local vault
   Future<void> saveDiscovery() async {
+    if (!isLocationReady) {
+      Get.snackbar(
+        'GPS Required',
+        'Cannot save discovery while GPS coordinates are acquiring or unavailable.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade900,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
     HapticFeedback.heavyImpact();
 
-    String resolvedCity = city.value;
-    String resolvedCountry = country.value;
-    if (resolvedCity == 'Locating...' || resolvedCity.isEmpty) {
-      resolvedCity = 'Dhaka';
+    String resolvedCity = city.value.trim();
+    String resolvedCountry = country.value.trim();
+    if (resolvedCity == 'Locating...' || resolvedCity == 'Detecting...') {
+      resolvedCity = '';
     }
-    if (resolvedCountry == 'Detecting...' || resolvedCountry.isEmpty) {
-      resolvedCountry = 'Bangladesh';
+    if (resolvedCountry == 'Detecting...' || resolvedCountry == 'Locating...') {
+      resolvedCountry = '';
     }
 
     final discoveryItem = {

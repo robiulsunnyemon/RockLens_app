@@ -41,7 +41,7 @@ class ResultController extends GetxController {
     executionMode.value = active.executionMode ?? 'Mobile SOTA Neural Engine';
 
     if (active.isLowConfidence) {
-      mineralName.value = 'Unrecognized Object';
+      mineralName.value = 'Unrecognized Rock';
       chemicalFormula.value = 'Non-Mineral Surface Detected';
       mineralGroup.value = 'UNIDENTIFIED SPECIMEN';
       confidencePercentage.value = active.confidencePercentage;
@@ -49,10 +49,10 @@ class ResultController extends GetxController {
       specimenEstimate.value = 'N/A';
       rarityTier.value = 'N/A';
       economicValue.value = 'No Mineral Value';
-      description.value = 'The scanned surface does not match known geological crystal textures. Please point camera directly at a real mineral or rock specimen.';
+      description.value = 'The scanned surface confidence is below 70%. Please point camera directly at a real mineral or rock specimen with good lighting.';
       properties.assignAll({
-        'Status': 'Low Confidence (<35%)',
-        'Crystalline Form': 'Non-Mineral',
+        'Status': 'Low Confidence (<70%)',
+        'Crystalline Form': 'Unrecognized Rock',
         'Recommendation': 'Scan real rock specimen',
       });
       alternativeCandidates.clear();

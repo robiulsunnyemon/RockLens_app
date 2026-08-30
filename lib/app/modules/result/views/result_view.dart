@@ -109,7 +109,7 @@ class ResultView extends GetView<ResultController> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'LOW CONFIDENCE / UNKNOWN OBJECT (<35%)',
+                            'LOW CONFIDENCE / UNRECOGNIZED ROCK (<70%)',
                             style: TextStyle(color: Colors.amberAccent, fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 0.6),
                           ),
                           SizedBox(height: 4),

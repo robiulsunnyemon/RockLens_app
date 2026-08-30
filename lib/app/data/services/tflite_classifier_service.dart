@@ -391,8 +391,8 @@ class TfliteClassifierService extends GetxService {
     final top1Label = top1Idx < _labels.length ? _labels[top1Idx] : 'specimen';
     final primarySpecimen = getSpecimenByLabel(top1Label);
 
-    // 6. Check if confidence is low (<35%) or Out-Of-Distribution
-    final status = (top1Score < 35.0)
+    // 6. Check if confidence is low (<70%) or Out-Of-Distribution
+    final status = (top1Score < 70.0)
         ? ClassificationStatus.lowConfidence
         : ClassificationStatus.success;
 

@@ -1,21 +1,21 @@
 import 'dart:async';
 import 'package:get/get.dart';
-import '../../../data/services/tflite_classifier_service.dart';
+import '../../../data/services/online_vision_service.dart';
 import '../../../routes/app_pages.dart';
 
 class ProcessingController extends GetxController {
   final progress = 0.obs;
   final consoleLines = <String>[].obs;
-  final TfliteClassifierService _classifier = Get.find<TfliteClassifierService>();
+  final OnlineVisionService _visionService = Get.find<OnlineVisionService>();
 
   static const List<String> inferenceStream = [
-    'Initializing Meta DINOv2 Vision Transformer (ViT-S/14)...',
-    'Generating 448x448 High-Density Patch Embeddings...',
-    'Extracting Self-Attention Feature Vectors & Crystal Luster...',
-    'Matching Spectral Signatures against 112 Mineral Classes...',
-    'Computing Softmax Probability Distribution & Top-K Ranking...',
-    'Cross-referencing Chemical Formulas & Mohs Hardness Scale...',
-    'Geological Classification & Validation Confirmed.',
+    'Connecting to RockLens Cloud Vision API...',
+    'Uploading Specimen Spectrum to Google Cloud Vision...',
+    'Running Web Detection & Knowledge Graph Analysis...',
+    'Matching Spectral Signatures against 112+ Mineral Classes...',
+    'Extracting Chemical Formula & Mohs Hardness Scale...',
+    'Computing Geological Confidence & Alternative Candidates...',
+    'Geological Identification Confirmed.',
   ];
 
   Timer? _streamTimer;
@@ -28,7 +28,10 @@ class ProcessingController extends GetxController {
 
   void _startInferencePipeline() {
     int index = 0;
-    _streamTimer = Timer.periodic(const Duration(milliseconds: 240), (timer) async {
+    // Launch cloud identification concurrently
+    final identifyFuture = _visionService.identifySpecimen();
+
+    _streamTimer = Timer.periodic(const Duration(milliseconds: 220), (timer) async {
       if (index < inferenceStream.length) {
         consoleLines.add(inferenceStream[index]);
         progress.value = (((index + 1) / inferenceStream.length) * 100).round();
@@ -36,10 +39,10 @@ class ProcessingController extends GetxController {
       } else {
         timer.cancel();
 
-        // Perform real DINOv2 neural classification
-        await _classifier.classifySpecimen();
+        // Wait for real Google Cloud Vision identification to complete
+        await identifyFuture;
 
-        Timer(const Duration(milliseconds: 300), () {
+        Timer(const Duration(milliseconds: 200), () {
           Get.offNamed(Routes.RESULT);
         });
       }

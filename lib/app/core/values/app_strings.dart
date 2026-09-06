@@ -1,20 +1,20 @@
-/// Centralized App strings, snackbar titles, messages, and copy text for OTZAR App.
+/// Centralized App strings, snackbar titles, messages, and copy text for RockLens App.
 abstract class AppStrings {
   AppStrings._();
 
   // General Brand & App Meta
-  static const String appName = 'OTZAR APP';
+  static const String appName = 'RockLens';
   static const String appTagline = 'GEOLOGICAL INTELLIGENCE SYSTEM';
   static const String appSubtag = 'Know What You Found';
-  static const String appVersion = 'v2.4.1 · BUILD 2026.08 · OFFLINE READY';
+  static const String appVersion = 'v3.0.0 · BUILD 2026.09 · ONLINE CLOUD AI';
 
   // Splash Screen Ticker Steps
   static const List<String> splashSteps = [
-    'Initializing Neural Engine...',
+    'Connecting to RockLens Cloud...',
     'Calibrating GPS Receiver...',
-    'Loading Mineral Database...',
-    'Engaging Offline Vault...',
-    'System Ready.',
+    'Loading Geological Knowledge Base...',
+    'Initializing Google Cloud Vision API...',
+    'RockLens Online & Ready.',
   ];
 
   // Onboarding Slides
@@ -22,37 +22,37 @@ abstract class AppStrings {
   static const String continueBtn = 'Continue';
   static const String accessSystemBtn = 'Access Field System';
 
-  static const String slide1Tag = 'AI VISION CORE';
-  static const String slide1Title = 'Instant Mineral Identification';
+  static const String slide1Tag = 'GOOGLE CLOUD VISION';
+  static const String slide1Title = 'Instant Rock Identification';
   static const String slide1Desc =
-      'Point. Capture. Identify. Our on-device AI analyzes luster, cleavage, and crystal structure from multiple angles—delivering fast, reliable results without an internet connection.';
+      'Point. Capture. Identify. Powered by Google Cloud Vision API and our global geological knowledge graph—delivering highly accurate rock and mineral results.';
 
-  static const String slide2Tag = 'OFFLINE RESILIENCE';
-  static const String slide2Title = 'Zero-Network Field Logging';
+  static const String slide2Tag = 'ONLINE CLOUD SYNC';
+  static const String slide2Title = 'Real-Time Field Logging';
   static const String slide2Desc =
-      'Every scan, coordinate, and field note is encrypted locally and queued for smart sync when connectivity is restored. Work anywhere — Atacama, Pilbara, Copperbelt.';
+      'Every scan, GPS coordinate, and field assay note is instantly synchronized to the cloud database with high-resolution photo storage.';
 
   static const String slide3Tag = 'GIS VAULT';
-  static const String slide3Title = 'Private Encrypted Claim Mapping';
+  static const String slide3Title = 'Private Geological Mapping';
   static const String slide3Desc =
-      'Plot every discovery on an AES-256 encrypted topographic GIS map. Define exploration polygon boundaries, generate KML exports, and protect your mineral intelligence.';
+      'Plot every rock discovery on an encrypted topographic GIS map. Define exploration boundaries and generate professional exports.';
 
   // Email Access Screen
   static const String emailAccessTitle = 'OPERATOR ACCESS';
-  static const String emailAccessSubtitle = 'AUTHENTICATED FIELD OPERATOR LOGIN';
+  static const String emailAccessSubtitle = 'ROCKLENS FIELD OPERATOR LOGIN';
   static const String emailInputLabel = 'OPERATOR EMAIL';
   static const String emailInputHint = 'name@geological.corp';
   static const String emailSubmitBtn = '4-Digit Security PIN';
   static const String emailDirectPinBtn = 'Already have a PIN? Enter PIN directly →';
   static const String invalidEmailError = 'Please enter a valid email address';
-  static const String emailSecurityNote = 'AES-256 ENCRYPTED SESSION · OFFLINE VAULT READY';
+  static const String emailSecurityNote = 'AES-256 ENCRYPTED SESSION · ONLINE VAULT READY';
   static const String faceIdBiometricProtected = 'FACE ID & BIOMETRIC PROTECTED';
   static const String orUseBiometrics = 'OR USE BIOMETRICS';
   static const String oneTapFaceIdLogin = 'ONE-TAP FACE ID LOGIN';
 
   // PIN Access Screen
   static const String fieldAccess = 'FIELD ACCESS';
-  static const String secureLogin = 'OTZAR APP GEOLOGICAL SYSTEM — SECURE LOGIN';
+  static const String secureLogin = 'ROCKLENS GEOLOGICAL SYSTEM — SECURE LOGIN';
   static const String pinHint = 'ENTER 4-DIGIT FIELD PIN';
   static const String biometric = 'BIOMETRIC';
   static const String invalidPin = 'Invalid PIN. Try again';
@@ -61,7 +61,7 @@ abstract class AppStrings {
   static const String faceIdTitle = 'Face ID & Biometrics';
   static const String faceIdSubtitle = '1-tap facial recognition login';
   static const String facePromptRegister = 'Scan your face to register Face ID security for this operator.';
-  static const String facePromptLogin = 'Scan face to unlock Otzar Geological Vault instantly';
+  static const String facePromptLogin = 'Scan face to unlock RockLens Geological Vault instantly';
 
   // -------------------------------------------------------------
   // SNACKBAR TITLES & MESSAGES
@@ -83,18 +83,19 @@ abstract class AppStrings {
   static const String snackFaceIdAuthSuccessTitle = 'Face ID Authenticated';
   static String snackFaceIdAuthSuccessMsg(String name) => 'Welcome back, $name. Field telemetry unlocked.';
 
-  static const String snackOfflineFaceUnlockTitle = 'Offline Face Unlock';
-  static String snackOfflineFaceUnlockMsg(String name) => 'Welcome back, $name. Operating in offline field mode.';
+  static const String snackOfflineFaceUnlockTitle = 'Face Unlock Success';
+  static String snackOfflineFaceUnlockMsg(String name) => 'Welcome back, $name. RockLens unlocked.';
 
-  // Neural Model & OTA Engine Snackbars
-  static const String snackNeuralEngineTitle = 'Neural Engine';
-  static String snackNeuralEngineRunningMsg(String version) => 'Currently running local edge model ($version).';
+  // Cloud Vision & Online Engine Snackbars
+  static const String snackNeuralEngineTitle = 'Cloud Vision Engine';
+  static String snackNeuralEngineRunningMsg(String version) => 'Connected to RockLens Google Cloud Vision API ($version).';
 
-  static const String snackNeuralModelUpgradedTitle = 'Neural Engine Upgraded!';
-  static String snackNeuralModelUpgradedMsg(String version) => 'Successfully updated to model $version without restarting.';
+  static const String snackNeuralModelUpgradedTitle = 'Cloud Vision Ready!';
+  static String snackNeuralModelUpgradedMsg(String version) => 'Online geological engine active ($version).';
 
-  static const String snackNeuralModelUpToDateTitle = 'AI Model Up to Date ✓';
-  static String snackNeuralModelUpToDateMsg(String version) => 'Inference engine is running the latest neural architecture ($version).';
+  static const String snackNeuralModelUpToDateTitle = 'Cloud Vision Online ✓';
+  static String snackNeuralModelUpToDateMsg(String version) => 'Identification engine is running active cloud intelligence ($version).';
+
 
   // Cloud Sync & Storage Engine Snackbars
   static const String snackSyncConfigTitle = 'Cloud Sync Config';

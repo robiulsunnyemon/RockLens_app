@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import '../../../data/services/tflite_classifier_service.dart';
+import '../../../data/services/online_vision_service.dart';
 import '../../result/controllers/result_controller.dart';
 
 class MohsReference {
@@ -17,7 +17,7 @@ class StreakColorItem {
 }
 
 class FieldTestController extends GetxController {
-  final TfliteClassifierService _classifier = Get.find<TfliteClassifierService>();
+  final OnlineVisionService _visionService = Get.find<OnlineVisionService>();
 
   final mohs = 3.5.obs;
   final streak = 'Pale Green'.obs;
@@ -52,7 +52,7 @@ class FieldTestController extends GetxController {
   }
 
   void _initTargetSpecimen() {
-    final active = _classifier.activeResult.value;
+    final active = _visionService.activeResult.value;
     if (active != null) {
       targetMineralName.value = active.mineralName;
       baseConfidence.value = active.confidencePercentage;
@@ -83,7 +83,7 @@ class FieldTestController extends GetxController {
 
   double get calculatedConfidence {
     double boost = 0.0;
-    final active = _classifier.activeResult.value;
+    final active = _visionService.activeResult.value;
 
     if (active != null) {
       final specimenStreak = (active.properties['STREAK'] ?? '').toLowerCase();

@@ -9,14 +9,14 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/widgets/otzar_dialog.dart';
 import '../../../data/services/storage_service.dart';
-import '../../../data/services/tflite_classifier_service.dart';
+import '../../../data/services/online_vision_service.dart';
 import '../../../routes/app_pages.dart';
 import '../../home/controllers/home_controller.dart';
 import '../../sync_engine/controllers/sync_engine_controller.dart';
 import '../../vault/controllers/vault_controller.dart';
 
 class LoggingController extends GetxController {
-  final TfliteClassifierService _classifier = Get.find<TfliteClassifierService>();
+  final OnlineVisionService _visionService = Get.find<OnlineVisionService>();
   final StorageService _storage = Get.find<StorageService>();
   final ImagePicker _imagePicker = ImagePicker();
 
@@ -109,7 +109,7 @@ class LoggingController extends GetxController {
   }
 
   void _initSpecimenData() {
-    final active = _classifier.activeResult.value;
+    final active = _visionService.activeResult.value;
     final randomId = 100 + Random().nextInt(899);
     specimenTag.value = '#SC-$randomId';
 
@@ -120,7 +120,7 @@ class LoggingController extends GetxController {
     }
 
     // Auto-attach 1st captured scan photo if present
-    final captured = _classifier.capturedPhotoPath.value;
+    final captured = _visionService.capturedPhotoPath.value;
     if (captured != null && captured.isNotEmpty && !specimenPhotos.contains(captured)) {
       specimenPhotos.add(captured);
     }

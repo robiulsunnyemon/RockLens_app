@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.otzar.app" "\0"
-            VALUE "FileDescription", "otzar_app" "\0"
+            VALUE "CompanyName", "com.rocklens.app" "\0"
+            VALUE "FileDescription", "rocklens_app" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "otzar_app" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.otzar.app. All rights reserved." "\0"
-            VALUE "OriginalFilename", "otzar_app.exe" "\0"
-            VALUE "ProductName", "otzar_app" "\0"
+            VALUE "InternalName", "rocklens_app" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 com.rocklens.app. All rights reserved." "\0"
+            VALUE "OriginalFilename", "rocklens_app.exe" "\0"
+            VALUE "ProductName", "RockLens" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

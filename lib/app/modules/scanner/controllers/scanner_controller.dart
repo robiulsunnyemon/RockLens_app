@@ -6,7 +6,7 @@ import 'package:flutter_compass/flutter_compass.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../data/services/tflite_classifier_service.dart';
+import '../../../data/services/online_vision_service.dart';
 import '../../../routes/app_pages.dart';
 
 enum ScanMode { single, burst }
@@ -287,8 +287,8 @@ class ScannerController extends GetxController {
     if (isScanning.value) return;
     HapticFeedback.mediumImpact();
 
-    if (Get.isRegistered<TfliteClassifierService>()) {
-      Get.find<TfliteClassifierService>().capturedPhotoPath.value = path;
+    if (Get.isRegistered<OnlineVisionService>()) {
+      Get.find<OnlineVisionService>().capturedPhotoPath.value = path;
     }
 
     // Immediately navigate to Processing Screen so the live camera viewfinder does not flash
@@ -305,8 +305,8 @@ class ScannerController extends GetxController {
     if (cameraController != null && isCameraInitialized.value) {
       try {
         final XFile picture = await cameraController!.takePicture();
-        if (Get.isRegistered<TfliteClassifierService>()) {
-          Get.find<TfliteClassifierService>().capturedPhotoPath.value = picture.path;
+        if (Get.isRegistered<OnlineVisionService>()) {
+          Get.find<OnlineVisionService>().capturedPhotoPath.value = picture.path;
         }
       } catch (e) {
         if (kDebugMode) {

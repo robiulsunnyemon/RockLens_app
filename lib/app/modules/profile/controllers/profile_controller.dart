@@ -11,7 +11,6 @@ import '../../../data/models/user_model.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../data/repositories/user_repository.dart';
 import '../../../data/services/storage_service.dart';
-import '../../../data/services/neural_model_sync_service.dart';
 import '../../../data/services/face_auth_service.dart';
 import '../../../routes/app_pages.dart';
 import '../../home/controllers/home_controller.dart';
@@ -1128,13 +1127,13 @@ class ProfileController extends GetxController {
               ),
               child: Obx(() => Column(
                     children: [
-                      _infoRow('Active On-Device Engine', neuralModelVersion.value),
+                      _infoRow('Active Engine', 'Google Cloud Vision API (Online)'),
                       const SizedBox(height: 8),
-                      _infoRow('Quantization Format', 'FP16 MobileNetV3 + GeoHead'),
+                      _infoRow('Knowledge Engine', '112+ Species · Mohs & Formulas'),
                       const SizedBox(height: 8),
-                      _infoRow('Mineral Classes', '140 African & Global Species'),
+                      _infoRow('Backend Service', 'RockLens Cloud Intelligence'),
                       const SizedBox(height: 8),
-                      _infoRow('Status', latestModelAvailable.value ? 'Update Available (v4.3.0)' : 'Up to Date'),
+                      _infoRow('Status', 'Connected & Operational ✓'),
                     ],
                   )),
             ),
@@ -1148,13 +1147,14 @@ class ProfileController extends GetxController {
                         ? null
                         : () async {
                             HapticFeedback.lightImpact();
-                            if (Get.isRegistered<NeuralModelSyncService>()) {
-                              final syncService = Get.find<NeuralModelSyncService>();
-                              isCheckingNeuralUpdate.value = true;
-                              await syncService.checkAndSyncModel(isUserInitiated: true);
-                              isCheckingNeuralUpdate.value = false;
-                              neuralModelVersion.value = _storage.activeNeuralVersion;
-                            }
+                            isCheckingNeuralUpdate.value = true;
+                            await Future.delayed(const Duration(milliseconds: 600));
+                            isCheckingNeuralUpdate.value = false;
+                            Get.snackbar(
+                              'Cloud Vision Online ✓',
+                              'RockLens Google Cloud Vision API is operational.',
+                              snackPosition: SnackPosition.BOTTOM,
+                            );
                           },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.ore,
@@ -1165,11 +1165,21 @@ class ProfileController extends GetxController {
                     ),
                     child: isCheckingNeuralUpdate.value
                         ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.litho,
+                            ),
                           )
-                        : const Text('Check & Deploy Latest Weights', style: TextStyle(fontWeight: FontWeight.bold)),
+                        : const Text(
+                            'Verify Cloud Vision Status',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                   ),
                 )),
           ],

@@ -11,7 +11,7 @@
     <uses-feature android:name="android.hardware.camera.flash" android:required="false" />
 
     <application
-        android:label="OTZAR APP"
+        android:label="RockLens"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

@@ -5,7 +5,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../values/app_dimensions.dart';
 import 'otzar_cached_image.dart';
-import '../../data/services/tflite_classifier_service.dart';
+import '../../data/services/online_vision_service.dart';
 import '../../modules/main_nav/controllers/main_nav_controller.dart';
 
 class SpecimenDetailsSheet {
@@ -52,9 +52,9 @@ class SpecimenDetailsSheet {
     String mineralGroup = 'GEOLOGICAL SPECIMEN';
     String estValue = r'$600 / kg';
 
-    if (Get.isRegistered<TfliteClassifierService>()) {
-      final classifier = Get.find<TfliteClassifierService>();
-      final specimen = classifier.getSpecimenByLabel(name);
+    if (Get.isRegistered<OnlineVisionService>()) {
+      final visionService = Get.find<OnlineVisionService>();
+      final specimen = visionService.getSpecimenByLabel(name);
       properties = specimen.toPropertiesMap();
       mineralGroup = specimen.group;
       estValue = specimen.specimenEstimate;

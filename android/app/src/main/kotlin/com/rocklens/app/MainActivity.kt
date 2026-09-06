@@ -1,4 +1,4 @@
-package com.khesedfavor.otzarapp
+package com.rocklens.app
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

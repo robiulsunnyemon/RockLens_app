@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.khesedfavor.otzarapp"
+    namespace = "com.rocklens.app"
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
@@ -15,7 +15,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.khesedfavor.otzarapp"
+        applicationId = "com.rocklens.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -28,9 +28,6 @@ android {
         versionName = flutter.versionName
     }
 
-    androidResources {
-        noCompress += "tflite"
-    }
 
     buildTypes {
         release {

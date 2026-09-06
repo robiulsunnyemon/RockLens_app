@@ -1,17 +1,12 @@
-# otzar_app
+# RockLens - Geological Intelligence & Mineral Identification System
 
-A new Flutter project.
+RockLens is an advanced geological intelligence mobile system and cloud API powered by Google Cloud Vision API for accurate rock and mineral identification, geological property mapping, and geospatial discovery tracking.
 
-## Getting Started
+## Key Highlights
 
-This project is a starting point for a Flutter application.
+- **Branding**: RockLens (formerly OTZAR)
+- **Engine**: 100% Online Cloud Vision using Google Cloud Vision API (Web Detection & Geological Knowledge Graph Entity Match)
+- **No Local ML Weights**: Local TFLite models completely removed for lightweight, ultra-fast performance
+- **High-Precision Data**: Rich geological metadata including Chemical Formula, Mohs Hardness, Crystal System, Luster, Cleavage, and Market Value
+- **Live Sync**: Direct real-time cloud synchronisation with PostgreSQL & Cloudinary CDN
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.

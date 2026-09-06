@@ -1,10 +1,10 @@
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import '../../../data/services/tflite_classifier_service.dart';
+import '../../../data/services/online_vision_service.dart';
 import '../../../routes/app_pages.dart';
 
 class ResultController extends GetxController {
-  final TfliteClassifierService _classifier = Get.find<TfliteClassifierService>();
+  final OnlineVisionService _visionService = Get.find<OnlineVisionService>();
 
   final mineralName = ''.obs;
   final chemicalFormula = ''.obs;
@@ -23,7 +23,7 @@ class ResultController extends GetxController {
   final errorMessage = ''.obs;
   final executionMode = ''.obs;
 
-  RxnString get capturedPhotoPath => _classifier.capturedPhotoPath;
+  RxnString get capturedPhotoPath => _visionService.capturedPhotoPath;
 
   @override
   void onInit() {
@@ -32,13 +32,13 @@ class ResultController extends GetxController {
   }
 
   Future<void> _loadResult() async {
-    MineralClassificationResult? active = _classifier.activeResult.value;
-    active ??= await _classifier.classifySpecimen();
+    MineralClassificationResult? active = _visionService.activeResult.value;
+    active ??= await _visionService.identifySpecimen();
 
     hasError.value = active.hasError;
     errorMessage.value = active.errorMessage ?? '';
     isLowConfidence.value = active.isLowConfidence;
-    executionMode.value = active.executionMode ?? 'Mobile SOTA Neural Engine';
+    executionMode.value = active.executionMode ?? 'Google Cloud Vision API (Online)';
 
     if (active.isLowConfidence) {
       mineralName.value = 'Unrecognized Rock';

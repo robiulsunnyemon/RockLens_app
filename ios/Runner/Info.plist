@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>OTZAR APP</string>
+	<string>RockLens</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -15,7 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>OTZAR APP</string>
+	<string>RockLens</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -67,17 +67,17 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>NSFaceIDUsageDescription</key>
-	<string>Otzar App uses Apple Face ID to securely authenticate the field exploration geologist.</string>
+	<string>RockLens uses Apple Face ID to securely authenticate the field exploration geologist.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Otzar App requires camera access to scan and identify mineral specimens in the field.</string>
+	<string>RockLens requires camera access to scan and identify mineral specimens in the field.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Otzar App requires photo library access to attach specimen gallery photos.</string>
+	<string>RockLens requires photo library access to attach specimen gallery photos.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Otzar App requires microphone access to record field voice notes for mineral discoveries.</string>
+	<string>RockLens requires microphone access to record field voice notes for mineral discoveries.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Otzar App requires GPS location access to record precise mineral deposit coordinates.</string>
+	<string>RockLens requires GPS location access to record precise mineral deposit coordinates.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Otzar App requires GPS location access to record field discovery telemetry on GIS maps.</string>
+	<string>RockLens requires GPS location access to record field discovery telemetry on GIS maps.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 </dict>

@@ -97,3 +97,5 @@ temp_interactive_push.bat
 
 # FVM Version Cache
 .fvm/
+config.bat
+node_modules

@@ -4,8 +4,8 @@ abstract class ApiEndpoints {
   ApiEndpoints._();
 
   // Base URL selection (Primary: PC LAN Wi-Fi IP, Secondary: localhost via ADB reverse)
-  static String baseUrl = "https://api.otzar.maktechapp.cloud";
-  static const String fallbackLocalUrl = 'https://api.otzar.maktechapp.cloud';
+  static String baseUrl = "https://api.otzarapp.com";
+  static const String fallbackLocalUrl = 'https://api.otzarapp.com';
 
   // API Version Prefix
   static const String apiV1 = '/api/v1';
@@ -28,6 +28,7 @@ abstract class ApiEndpoints {
   // Specimens & Cloud Sync Endpoints
   static const String syncBatch = '$apiV1/sync/batch';
   static const String specimens = '$apiV1/specimens';
+  static const String identifySpecimen = '$apiV1/specimens/identify';
 
   // AI & Neural Model OTA Endpoints
   static const String neuralModelLatest = '$apiV1/ai/neural-model-latest';

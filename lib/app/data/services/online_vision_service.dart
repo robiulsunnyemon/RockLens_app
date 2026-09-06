@@ -169,14 +169,15 @@ class OnlineVisionService extends GetxService {
       });
 
       var response = await _apiClient.post(
-        '/specimens/identify',
+        '${ApiEndpoints.apiV1}/specimens/identify',
         formData,
       );
 
+      // Try fallback url if unreachable
       if (!response.isOk) {
         _apiClient.baseUrl = ApiEndpoints.fallbackLocalUrl;
         response = await _apiClient.post(
-          '/specimens/identify',
+          '${ApiEndpoints.apiV1}/specimens/identify',
           formData,
         );
       }
